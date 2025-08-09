@@ -162,10 +162,9 @@ class _HomeState extends State<Home> {
     });
 
     // DBにない新規写真だけ抽出
-    final newAssets = assets
-        .where((asset) => !existingAssetIds.contains(asset.id))
-        .toList()
-        .sublist(0, 5);
+    final newAssetsAll =
+        assets.where((asset) => !existingAssetIds.contains(asset.id)).toList();
+    final newAssets = newAssetsAll.sublist(0, min(5, newAssetsAll.length));
 
     if (newAssets.isNotEmpty) {
       print('新しいスクリーンショットが ${newAssets.length} 件あります。');
@@ -356,7 +355,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
           ),
-          if (!_loading && totalPages > 1)
+          if (totalPages > 1)
             Pagination(
               currentPage: _currentPage,
               totalPages: totalPages,

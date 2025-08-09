@@ -21,3 +21,4 @@ export 'package:snappy/models/schema.dart';
 export 'package:snappy/components/add_category_form.dart';
 export 'package:flutter/src/services/message_codec.dart';
 export 'package:isar/isar.dart';
+export 'dart:math';

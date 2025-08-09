@@ -10,19 +10,47 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.deepPurple),
-            child: Text(
-              'メニュー',
-              style: TextStyle(color: Colors.white, fontSize: 24),
+          Container(
+            width: 150,
+            height: 100,
+            padding:
+                const EdgeInsets.only(top: 20, left: 16, right: 16), // 文字の上に余白
+            decoration: const BoxDecoration(
+              color: Color(0xFFF98E6E),
+            ),
+            child: Stack(
+              children: [
+                // 背景の円を配置
+                Positioned(
+                  top: 10,
+                  left: 40,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.withOpacity(0.3), // 円の色・透過調整可
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                // テキストを前面に配置
+                const Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Text(
+                    'MENU',
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 20),
           ListTile(
             leading: const Icon(Icons.home),
             title: const Text('ホーム'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushAndRemoveUntil(
                 context,
                 PageRouteBuilder(
                   transitionDuration: const Duration(milliseconds: 200),
@@ -30,12 +58,10 @@ class AppDrawer extends StatelessWidget {
                       const Home(),
                   transitionsBuilder:
                       (context, animation, secondaryAnimation, child) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
+                    return FadeTransition(opacity: animation, child: child);
                   },
                 ),
+                (route) => false,
               );
             },
           ),
