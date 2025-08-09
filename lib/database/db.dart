@@ -2,11 +2,13 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:snappy/models/schema.dart';
 
-Future<Isar> openIsarInstance() async {
-  final dir = await getApplicationDocumentsDirectory();
+Isar? _isarInstance;
 
-  return await Isar.open(
-    [ScreenshotSchema], // 生成されたスキーマを指定
-    directory: dir.path,
-  );
+Future<Isar> openIsarInstance() async {
+  if (_isarInstance != null && _isarInstance!.isOpen) {
+    return _isarInstance!;
+  }
+  _isarInstance = await Isar.open([ScreenshotSchema],
+      directory: (await getApplicationDocumentsDirectory()).path);
+  return _isarInstance!;
 }
