@@ -56,11 +56,18 @@ class CustomButton extends StatelessWidget {
       );
     }
 
-    else {
+    else if (!hasIcon && hasLabel){
       return ElevatedButton(
         style: style,
         onPressed: onPressed,
         child: Text(label!),
+      );
+    }
+    else {
+        return ElevatedButton(
+        style: style,
+        onPressed: onPressed,
+        child: Text("Button"),
       );
     }
     }
