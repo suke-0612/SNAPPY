@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:typed_data';
 
 class ItemCard extends StatelessWidget {
-  final String imagePath;
   final String text;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -11,7 +10,6 @@ class ItemCard extends StatelessWidget {
 
   const ItemCard({
     super.key,
-    required this.imagePath,
     required this.text,
     required this.isSelected,
     this.onTap,
@@ -39,11 +37,6 @@ class ItemCard extends StatelessWidget {
                 if (thumbnailBytes != null)
                   Image.memory(
                     thumbnailBytes!,
-                    fit: BoxFit.cover,
-                  )
-                else if (imagePath.isNotEmpty)
-                  Image.asset(
-                    imagePath,
                     fit: BoxFit.cover,
                   )
                 else

@@ -22,9 +22,24 @@ const ScreenshotSchema = CollectionSchema(
       name: r'assetId',
       type: IsarType.string,
     ),
-    r'filePath': PropertySchema(
+    r'description': PropertySchema(
       id: 1,
-      name: r'filePath',
+      name: r'description',
+      type: IsarType.string,
+    ),
+    r'location': PropertySchema(
+      id: 2,
+      name: r'location',
+      type: IsarType.string,
+    ),
+    r'tag': PropertySchema(
+      id: 3,
+      name: r'tag',
+      type: IsarType.string,
+    ),
+    r'title': PropertySchema(
+      id: 4,
+      name: r'title',
       type: IsarType.string,
     )
   },
@@ -49,7 +64,30 @@ int _screenshotEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.assetId.length * 3;
-  bytesCount += 3 + object.filePath.length * 3;
+  {
+    final value = object.description;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.location;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.tag;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.title;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -60,7 +98,10 @@ void _screenshotSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.assetId);
-  writer.writeString(offsets[1], object.filePath);
+  writer.writeString(offsets[1], object.description);
+  writer.writeString(offsets[2], object.location);
+  writer.writeString(offsets[3], object.tag);
+  writer.writeString(offsets[4], object.title);
 }
 
 Screenshot _screenshotDeserialize(
@@ -71,8 +112,11 @@ Screenshot _screenshotDeserialize(
 ) {
   final object = Screenshot();
   object.assetId = reader.readString(offsets[0]);
-  object.filePath = reader.readString(offsets[1]);
+  object.description = reader.readStringOrNull(offsets[1]);
   object.id = id;
+  object.location = reader.readStringOrNull(offsets[2]);
+  object.tag = reader.readStringOrNull(offsets[3]);
+  object.title = reader.readStringOrNull(offsets[4]);
   return object;
 }
 
@@ -86,7 +130,13 @@ P _screenshotDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
+      return (reader.readStringOrNull(offset)) as P;
+    case 4:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -315,13 +365,32 @@ extension ScreenshotQueryFilter
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathEqualTo(
-    String value, {
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'description',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'description',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionEqualTo(
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -329,46 +398,48 @@ extension ScreenshotQueryFilter
   }
 
   QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
-      filePathGreaterThan(
-    String value, {
+      descriptionGreaterThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathLessThan(
-    String value, {
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionLessThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionBetween(
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'filePath',
+        property: r'description',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -379,50 +450,49 @@ extension ScreenshotQueryFilter
   }
 
   QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
-      filePathStartsWith(
+      descriptionStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathEndsWith(
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'filePath',
+        property: r'description',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> filePathMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      descriptionMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'filePath',
+        property: r'description',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -430,20 +500,20 @@ extension ScreenshotQueryFilter
   }
 
   QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
-      filePathIsEmpty() {
+      descriptionIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'filePath',
+        property: r'description',
         value: '',
       ));
     });
   }
 
   QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
-      filePathIsNotEmpty() {
+      descriptionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'filePath',
+        property: r'description',
         value: '',
       ));
     });
@@ -501,6 +571,450 @@ extension ScreenshotQueryFilter
       ));
     });
   }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      locationIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      locationGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'location',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      locationStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> locationMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'location',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      locationIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      locationIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'location',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'tag',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'tag',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'tag',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'tag',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'tag',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tag',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> tagIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'tag',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'title',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'title',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'title',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'title',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition> titleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterFilterCondition>
+      titleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension ScreenshotQueryObject
@@ -523,15 +1037,51 @@ extension ScreenshotQuerySortBy
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByFilePath() {
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'filePath', Sort.asc);
+      return query.addSortBy(r'description', Sort.asc);
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByFilePathDesc() {
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'filePath', Sort.desc);
+      return query.addSortBy(r'description', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByLocation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByLocationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByTag() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tag', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByTagDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tag', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> sortByTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.desc);
     });
   }
 }
@@ -550,15 +1100,15 @@ extension ScreenshotQuerySortThenBy
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByFilePath() {
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByDescription() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'filePath', Sort.asc);
+      return query.addSortBy(r'description', Sort.asc);
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByFilePathDesc() {
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByDescriptionDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'filePath', Sort.desc);
+      return query.addSortBy(r'description', Sort.desc);
     });
   }
 
@@ -573,6 +1123,42 @@ extension ScreenshotQuerySortThenBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByLocation() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByLocationDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'location', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByTag() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tag', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByTagDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tag', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QAfterSortBy> thenByTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.desc);
+    });
+  }
 }
 
 extension ScreenshotQueryWhereDistinct
@@ -584,10 +1170,31 @@ extension ScreenshotQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Screenshot, Screenshot, QDistinct> distinctByFilePath(
+  QueryBuilder<Screenshot, Screenshot, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'filePath', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'description', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QDistinct> distinctByLocation(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'location', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QDistinct> distinctByTag(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tag', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Screenshot, Screenshot, QDistinct> distinctByTitle(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
 }
@@ -606,9 +1213,27 @@ extension ScreenshotQueryProperty
     });
   }
 
-  QueryBuilder<Screenshot, String, QQueryOperations> filePathProperty() {
+  QueryBuilder<Screenshot, String?, QQueryOperations> descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'filePath');
+      return query.addPropertyName(r'description');
+    });
+  }
+
+  QueryBuilder<Screenshot, String?, QQueryOperations> locationProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'location');
+    });
+  }
+
+  QueryBuilder<Screenshot, String?, QQueryOperations> tagProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tag');
+    });
+  }
+
+  QueryBuilder<Screenshot, String?, QQueryOperations> titleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'title');
     });
   }
 }

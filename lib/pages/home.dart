@@ -9,9 +9,20 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  static const List<String> tags = [
+    "all",
+    "location",
+    "things",
+    "train",
+    "others"
+  ];
+  String selectedTag = tags.first;
+
+  Map<String, Screenshot> _isarScreenshotMap = {};
+  List<AssetEntity> _screenshots = [];
+
   String _searchQuery = '';
   bool _hasAccess = false;
-  List<AssetEntity> _screenshots = [];
   bool _loading = true;
 
   bool _isSelectionMode = false;
@@ -20,6 +31,7 @@ class _HomeState extends State<Home> {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
 
+  // --- ページング用データ ---
   List<ItemData> get _pagedItems {
     final allItems = _itemsFromScreenshots;
     final start = (_currentPage - 1) * _itemsPerPage;
@@ -29,17 +41,28 @@ class _HomeState extends State<Home> {
 
   List<ItemData> get _itemsFromScreenshots {
     final filtered = _screenshots.where((asset) {
-      final path = asset.relativePath?.toLowerCase() ?? '';
-      return path.contains(_searchQuery.toLowerCase());
+      final dbData = _isarScreenshotMap[asset.id];
+      final matchesSearch = _searchQuery.isEmpty ||
+          (dbData?.title ?? '')
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()) ||
+          (dbData?.description ?? '')
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase());
+      final matchesTag = selectedTag == "all" || (dbData?.tag == selectedTag);
+      return matchesSearch && matchesTag;
     }).toList();
 
     return filtered.map((asset) {
+      final dbData = _isarScreenshotMap[asset.id];
       return ItemData(
         id: asset.id,
-        imagePath: '',
-        text: asset.relativePath ?? 'No Path',
-        onTapPopupContent:
-            Text('Asset ID: ${asset.id}\nパス: ${asset.relativePath ?? "不明"}'),
+        text: dbData?.title ?? '',
+        onTapPopupContent: Text('Asset ID: ${asset.id}\n'
+            'タグ: ${dbData?.tag ?? "なし"}\n'
+            'タイトル: ${dbData?.title ?? "なし"}\n'
+            '場所: ${dbData?.location ?? "不明"}\n'
+            '説明: ${dbData?.description ?? "なし"}\n'),
         assetEntity: asset,
       );
     }).toList();
@@ -48,8 +71,10 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    // 権限チェックと初期データロードを一括で実行
     _checkPermissionAndLoad();
 
+    // 写真の変更検知セットアップ
     PhotoManager.addChangeCallback((_) async {
       if (_hasAccess) {
         await _loadAndSaveScreenshots();
@@ -61,44 +86,57 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     PhotoManager.stopChangeNotify();
+    PhotoManager.removeChangeCallback(() {} as ValueChanged<MethodCall>);
     super.dispose();
   }
 
+  /// DBから全スクショ情報を取得してMapに変換し更新
+  Future<void> _refreshIsarScreenshotMap() async {
+    final isar = await openIsarInstance();
+    final all = await isar.screenshots.where().findAll();
+    setState(() {
+      _isarScreenshotMap = {for (var s in all) s.assetId: s};
+    });
+  }
+
+  /// 権限チェック＋写真データロードの一連処理
   Future<void> _checkPermissionAndLoad() async {
-    final PermissionState ps = await PhotoManager.requestPermissionExtend();
+    setState(() => _loading = true);
+
+    final ps = await PhotoManager.requestPermissionExtend();
 
     if (ps.hasAccess) {
       setState(() {
         _hasAccess = true;
-        _loading = true;
       });
       await _loadAndSaveScreenshots();
-      setState(() => _loading = false);
     } else {
+      // 権限拒否時のUI案内（リトライは一度だけにするなど検討）
       await PhotoManager.openSetting();
-      final PermissionState newPs =
-          await PhotoManager.requestPermissionExtend();
+      final newPs = await PhotoManager.requestPermissionExtend();
       if (newPs.hasAccess) {
         setState(() {
           _hasAccess = true;
-          _loading = true;
         });
         await _loadAndSaveScreenshots();
-        setState(() => _loading = false);
+      } else {
+        setState(() {
+          _hasAccess = false;
+          // ここでユーザーに権限拒否の案内をUIに表示するのも良い
+        });
       }
     }
+
+    setState(() => _loading = false);
   }
 
+  /// 写真を読み込み、DBに保存し、APIに新規写真のみ送信
   Future<void> _loadAndSaveScreenshots() async {
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.image,
       filterOption: FilterOptionGroup()
         ..addOrderOption(
-          const OrderOption(
-            type: OrderOptionType.createDate,
-            asc: false,
-          ),
-        ),
+            OrderOption(type: OrderOptionType.createDate, asc: false)),
     );
 
     final screenshotAlbum = albums.firstWhere(
@@ -107,34 +145,57 @@ class _HomeState extends State<Home> {
     );
 
     final assets = await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
-
     final isar = await openIsarInstance();
 
-    final screenshots = assets
-        .where((asset) => asset.relativePath != null)
-        .map((asset) => Screenshot()
-          ..assetId = asset.id
-          ..createDate = asset.createDateTime
-          ..filePath = asset.relativePath!)
-        .toList();
+    // まずDBの既存データを読み込む
+    final existingScreenshots = await isar.screenshots.where().findAll();
+    final existingAssetIds = existingScreenshots.map((e) => e.assetId).toSet();
 
-    await isar.writeTxn(() async {
-      await isar.screenshots.putAll(screenshots);
+    // 表示用に、DBにあるassetIdに対応するAssetEntityをassetsから取り出す
+    final screenshotsToDisplay =
+        assets.where((asset) => existingAssetIds.contains(asset.id)).toList();
+
+    // ここでまずDBの既存データに対応する写真だけ表示
+    setState(() {
+      _screenshots = screenshotsToDisplay;
+      _currentPage = 1;
     });
 
-    // APIにファイルとタグを送る処理を呼ぶ
-    try {
-      // TODO: 後で復活
-      // await uploadFilesWithTags(assets.sublist(0, 5), [
-      //   ['tag1', 'tag1の説明'],
-      //   ['tag2', 'tag2の説明'],
-      // ]);
-    } catch (e) {
-      print('API送信失敗: $e');
+    // DBにない新規写真だけ抽出
+    final newAssets = assets
+        .where((asset) => !existingAssetIds.contains(asset.id))
+        .toList()
+        .sublist(0, 5);
+
+    if (newAssets.isNotEmpty) {
+      print('新しいスクリーンショットが ${newAssets.length} 件あります。');
+      try {
+        const apiTags = [
+          ["location", "行きたい場所、泊まりたい場所など。位置情報を持つ。位置情報を返してほしい"],
+          ["train", "時刻表など。どの駅に何時発の電車が、どの駅に何時につくか"],
+          ["things", "ほしいもの"],
+          ["others", "その他のタグ"]
+        ];
+        await uploadFilesWithTags(newAssets, apiTags);
+      } catch (e) {
+        print('API送信失敗: $e');
+        return;
+      }
     }
 
+    // API成功 or 新規写真なしならDBの最新データを再取得し画面更新
+    await _refreshIsarScreenshotMap();
+
+    final allScreenshots = await isar.screenshots.where().findAll();
+    final allAssetIds = allScreenshots.map((e) => e.assetId).toSet();
+
+    // assetsからDBにあるものだけ抽出して表示用にセット
+    final updatedScreenshots =
+        assets.where((asset) => allAssetIds.contains(asset.id)).toList();
+
     setState(() {
-      _screenshots = assets;
+      _screenshots = updatedScreenshots;
+      _currentPage = 1;
     });
   }
 
@@ -233,10 +294,45 @@ class _HomeState extends State<Home> {
         children: [
           Container(
             margin: const EdgeInsets.all(10.0),
-            child: InputSearch(
-              onChanged: (value) {
+            child: Row(
+              children: [
+                // 検索バー部分（幅いっぱいに広げたい場合Expandedでラップ）
+                Expanded(
+                  child: Container(
+                    // ここに検索バーのWidget（InputSearchなど）を配置
+                    child: InputSearch(
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                          _currentPage = 1;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                // ローディングアイコン部分
+                if (_loading)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8.0),
+                    width: 24,
+                    height: 24,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+          ),
+
+          // タグプルダウン
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            alignment: Alignment.centerLeft,
+            child: SelectTagPullButton(
+              tags: tags,
+              selectedTag: selectedTag,
+              onTagSelected: (tag) {
                 setState(() {
-                  _searchQuery = value;
+                  selectedTag = tag;
                   _currentPage = 1;
                 });
               },
@@ -245,18 +341,16 @@ class _HomeState extends State<Home> {
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
-                ? _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ItemsView(
-                        items: _pagedItems,
-                        selectedItems: _selectedIds,
-                        isSelectionMode: _isSelectionMode,
-                        onItemTap: _handleTap,
-                        onItemLongPress: _handleLongPress,
-                      )
+                ? ItemsView(
+                    items: _pagedItems,
+                    selectedItems: _selectedIds,
+                    isSelectionMode: _isSelectionMode,
+                    onItemTap: _handleTap,
+                    onItemLongPress: _handleLongPress,
+                  )
                 : Center(
                     child: Text(
-                      "スクリーンショットマネージャーは、\nアプリの設定から有効にしてください。",
+                      "スクリーンショットマネージャーは、写真へのアクセスが必要です。アプリの設定から有効にしてください。",
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),

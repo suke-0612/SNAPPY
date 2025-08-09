@@ -60,7 +60,6 @@ class _ItemsViewState extends State<ItemsView> {
 
           return ItemCard(
             key: ValueKey(item.id),
-            imagePath: item.imagePath,
             text: item.text,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),
@@ -70,7 +69,6 @@ class _ItemsViewState extends State<ItemsView> {
         } else {
           return ItemCard(
             key: ValueKey(item.id),
-            imagePath: item.imagePath,
             text: item.text,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),

@@ -2,11 +2,14 @@ import 'package:isar/isar.dart';
 
 part 'schema.g.dart';
 
-@Collection()
+@collection
 class Screenshot {
-  Id id = Isar.autoIncrement;
-  late String assetId;
-  late String filePath;
+  Id id = Isar.autoIncrement; // Isar内部ID
+  late String assetId; // AssetEntity.id と対応
+  String? tag;
+  String? title;
+  String? location;
+  String? description;
 
-  set createDate(DateTime createDate) {}
+  get someTextField => null;
 }
