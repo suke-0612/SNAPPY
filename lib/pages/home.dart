@@ -17,6 +17,7 @@ class _HomeState extends State<Home> {
       selectedTag = tag;
     });
   }
+
   String _searchQuery = '';
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
@@ -245,6 +246,22 @@ class _HomeState extends State<Home> {
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value;
+                  _currentPage = 1;
+                });
+              },
+            ),
+          ),
+
+          // タグプルダウン
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            alignment: Alignment.centerLeft,
+            child: SelectTagPullButton(
+              tags: tags,
+              selectedTag: selectedTag,
+              onTagSelected: (tag) {
+                setState(() {
+                  selectedTag = tag;
                   _currentPage = 1;
                 });
               },
