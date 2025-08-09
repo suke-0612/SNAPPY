@@ -1,43 +1,52 @@
 import 'package:flutter/material.dart';
 
-class SelectTagPullButton extends StatefulWidget {
+class SelectTagPullButton extends StatelessWidget {
   final List<String> tags;
+  final String selectedTag;
+  final Function(String) onTagSelected;
 
   const SelectTagPullButton({
     super.key,
     required this.tags,
+    required this.selectedTag,
+    required this.onTagSelected,
   });
 
   @override
-  State<SelectTagPullButton> createState() => _SelectTagPullButtonState();
-}
-
-class _SelectTagPullButtonState extends State<SelectTagPullButton> {
-  late String dropdownValue;
-
-  @override
-  void initState() {
-    super.initState();
-    dropdownValue = widget.tags.first;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: dropdownValue,
-      icon: const Icon(Icons.arrow_downward),
-      elevation: 16,
-      style: const TextStyle(color: Colors.deepPurple),
-      underline: Container(height: 2, color: Colors.deepPurpleAccent),
-      onChanged: (String? value) {
-        // This is called when the user selects an item.
-        setState(() {
-          dropdownValue = value!;
-        });
-      },
-      items: widget.tags.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(value: value, child: Text(value));
-      }).toList(),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: DropdownButton<String>(
+        value: selectedTag,
+        icon: const Icon(Icons.keyboard_arrow_down),
+        elevation: 16,
+        style: const TextStyle(color: Colors.black),
+        underline: Container(height: 0, color: Colors.transparent),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        onChanged: (String? value) {
+          if (value != null) {
+            onTagSelected(value);
+          }
+        },
+        items: tags.map<DropdownMenuItem<String>>((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
