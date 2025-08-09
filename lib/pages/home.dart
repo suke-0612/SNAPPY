@@ -9,38 +9,128 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final List<ItemData> _items = List.generate(
-    10,
-    (index) => ItemData(
-      id: '${index + 1}',
-      imagePath: 'assets/images/IMG_0304.jpg',
-      text: 'アイテム ${index + 1}',
-      onTapPopupContent: Text('アイテム ${index + 1} の詳細情報'),
-    ),
-  );
+  bool _hasAccess = false;
+  List<AssetEntity> _screenshots = [];
+  bool _loading = true;
 
   bool _isSelectionMode = false;
-  final Set<String> _selectedItems = {};
+  final Set<String> _selectedIds = {};
 
-  void _handleLongPress(ItemData item) {
-    if (!_isSelectionMode) {
+  // AssetEntity を ItemsView 用の ItemData に変換
+  List<ItemData> get _itemsFromScreenshots {
+    return _screenshots.map((asset) {
+      return ItemData(
+        id: asset.id,
+        imagePath: '', // AssetEntityから画像取得するので空文字でOK
+        text: asset.relativePath ?? 'No Path',
+        onTapPopupContent:
+            Text('Asset ID: ${asset.id}\nパス: ${asset.relativePath ?? "不明"}'),
+        assetEntity: asset, // これを追加した ItemData クラスを使う想定
+      );
+    }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermissionAndLoad();
+
+    PhotoManager.addChangeCallback((_) async {
+      if (_hasAccess) {
+        await _loadAndSaveScreenshots();
+      }
+    });
+    PhotoManager.startChangeNotify();
+  }
+
+  @override
+  void dispose() {
+    PhotoManager.stopChangeNotify();
+    super.dispose();
+  }
+
+  Future<void> _checkPermissionAndLoad() async {
+    final PermissionState ps = await PhotoManager.requestPermissionExtend();
+
+    if (ps.hasAccess) {
       setState(() {
-        _isSelectionMode = true;
-        _selectedItems.add(item.id);
+        _hasAccess = true;
+        _loading = true;
       });
+      await _loadAndSaveScreenshots();
+      setState(() => _loading = false);
+    } else {
+      await PhotoManager.openSetting();
+      final PermissionState newPs =
+          await PhotoManager.requestPermissionExtend();
+      if (newPs.hasAccess) {
+        setState(() {
+          _hasAccess = true;
+          _loading = true;
+        });
+        await _loadAndSaveScreenshots();
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  Future<void> _loadAndSaveScreenshots() async {
+    final albums = await PhotoManager.getAssetPathList(
+      type: RequestType.image,
+      filterOption: FilterOptionGroup()
+        ..addOrderOption(
+          const OrderOption(
+            type: OrderOptionType.createDate,
+            asc: false,
+          ),
+        ),
+    );
+
+    final screenshotAlbum = albums.firstWhere(
+      (album) => album.name.toLowerCase().contains("screenshot"),
+      orElse: () => albums.first,
+    );
+
+    final assets = await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
+
+    final isar = await openIsarInstance();
+
+    final screenshots = assets
+        .where((asset) => asset.relativePath != null)
+        .map((asset) => Screenshot()
+          ..assetId = asset.id
+          ..createDate = asset.createDateTime
+          ..filePath = asset.relativePath!)
+        .toList();
+
+    await isar.writeTxn(() async {
+      await isar.screenshots.putAll(screenshots);
+    });
+
+    // APIにファイルとタグを送る処理を呼ぶ
+    try {
+      // TODO: 後で復活
+      // await uploadFilesWithTags(assets.sublist(0, 5), [
+      //   ['tag1', 'tag1の説明'],
+      //   ['tag2', 'tag2の説明'],
+      // ]);
+    } catch (e) {
+      print('API送信失敗: $e');
+    }
+
+    setState(() {
+      _screenshots = assets;
+    });
   }
 
   void _handleTap(ItemData item) {
     if (_isSelectionMode) {
       setState(() {
-        if (_selectedItems.contains(item.id)) {
-          _selectedItems.remove(item.id);
-          if (_selectedItems.isEmpty) {
-            _isSelectionMode = false;
-          }
+        if (_selectedIds.contains(item.id)) {
+          _selectedIds.remove(item.id);
+          if (_selectedIds.isEmpty) _isSelectionMode = false;
         } else {
-          _selectedItems.add(item.id);
+          _selectedIds.add(item.id);
         }
       });
     } else {
@@ -48,19 +138,29 @@ class _HomeState extends State<Home> {
     }
   }
 
+  void _handleLongPress(ItemData item) {
+    if (!_isSelectionMode) {
+      setState(() {
+        _isSelectionMode = true;
+        _selectedIds.add(item.id);
+      });
+    }
+  }
+
   void _exitSelectionMode() {
     setState(() {
       _isSelectionMode = false;
-      _selectedItems.clear();
+      _selectedIds.clear();
     });
   }
 
   void _deleteSelectedItems() {
     setState(() {
-      _items.removeWhere((item) => _selectedItems.contains(item.id));
+      // AssetEntityのリストからIDに一致するものを除去
+      _screenshots.removeWhere((asset) => _selectedIds.contains(asset.id));
       _exitSelectionMode();
     });
-    print('削除が実行されました: $_selectedItems');
+    print('削除が実行されました: $_selectedIds');
   }
 
   void _showPopup(Widget content) {
@@ -68,7 +168,10 @@ class _HomeState extends State<Home> {
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: content,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: content,
+        ),
       ),
     );
   }
@@ -88,11 +191,12 @@ class _HomeState extends State<Home> {
                 onPressed: _exitSelectionMode,
               ),
               Text(
-                '${_selectedItems.length}個選択中',
+                '${_selectedIds.length}個選択中',
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -112,13 +216,23 @@ class _HomeState extends State<Home> {
         children: [
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
-            child: ItemsView(
-              items: _items,
-              selectedItems: _selectedItems,
-              isSelectionMode: _isSelectionMode,
-              onItemTap: _handleTap,
-              onItemLongPress: _handleLongPress,
-            ),
+            child: _hasAccess
+                ? _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ItemsView(
+                        items: _itemsFromScreenshots,
+                        selectedItems: _selectedIds,
+                        isSelectionMode: _isSelectionMode,
+                        onItemTap: _handleTap,
+                        onItemLongPress: _handleLongPress,
+                      )
+                : Center(
+                    child: Text(
+                      "スクリーンショットマネージャーは、\nアプリの設定から有効にしてください。",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
           ),
         ],
       ),

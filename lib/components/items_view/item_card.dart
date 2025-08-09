@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 
 class ItemCard extends StatelessWidget {
   final String imagePath;
@@ -6,6 +7,7 @@ class ItemCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final Uint8List? thumbnailBytes;
 
   const ItemCard({
     super.key,
@@ -14,6 +16,7 @@ class ItemCard extends StatelessWidget {
     required this.isSelected,
     this.onTap,
     this.onLongPress,
+    this.thumbnailBytes,
   });
 
   @override
@@ -32,10 +35,20 @@ class ItemCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                ),
+                // サムネイルがあれば表示、なければ空のContainer
+                if (thumbnailBytes != null)
+                  Image.memory(
+                    thumbnailBytes!,
+                    fit: BoxFit.cover,
+                  )
+                else if (imagePath.isNotEmpty)
+                  Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                  )
+                else
+                  Container(color: Colors.grey),
+
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Container(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/importer.dart';
+import 'dart:typed_data';
 
-class ItemsView extends StatelessWidget {
+class ItemsView extends StatefulWidget {
   final List<ItemData> items;
   final Set<String> selectedItems;
   final bool isSelectionMode;
@@ -18,6 +20,24 @@ class ItemsView extends StatelessWidget {
   });
 
   @override
+  State<ItemsView> createState() => _ItemsViewState();
+}
+
+class _ItemsViewState extends State<ItemsView> {
+  final Map<String, Uint8List?> _thumbnailCache = {};
+
+  Future<void> _loadThumbnail(String id, AssetEntity asset) async {
+    if (_thumbnailCache.containsKey(id)) return; // 既に読み込み済みなら何もしない
+    final data =
+        await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
+    if (mounted) {
+      setState(() {
+        _thumbnailCache[id] = data;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
@@ -27,19 +47,36 @@ class ItemsView extends StatelessWidget {
         mainAxisSpacing: 16,
         childAspectRatio: 3 / 4,
       ),
-      itemCount: items.length,
+      itemCount: widget.items.length,
       itemBuilder: (context, index) {
-        final item = items[index];
-        final isSelected = selectedItems.contains(item.id);
+        final item = widget.items[index];
+        final isSelected = widget.selectedItems.contains(item.id);
 
-        return ItemCard(
-          key: ValueKey(item.id),
-          imagePath: item.imagePath,
-          text: item.text,
-          isSelected: isSelected,
-          onTap: () => onItemTap(item),
-          onLongPress: () => onItemLongPress(item),
-        );
+        if (item.assetEntity != null) {
+          // サムネイルがまだキャッシュされてなければロード
+          if (!_thumbnailCache.containsKey(item.id)) {
+            _loadThumbnail(item.id, item.assetEntity!);
+          }
+
+          return ItemCard(
+            key: ValueKey(item.id),
+            imagePath: item.imagePath,
+            text: item.text,
+            isSelected: isSelected,
+            onTap: () => widget.onItemTap(item),
+            onLongPress: () => widget.onItemLongPress(item),
+            thumbnailBytes: _thumbnailCache[item.id],
+          );
+        } else {
+          return ItemCard(
+            key: ValueKey(item.id),
+            imagePath: item.imagePath,
+            text: item.text,
+            isSelected: isSelected,
+            onTap: () => widget.onItemTap(item),
+            onLongPress: () => widget.onItemLongPress(item),
+          );
+        }
       },
     );
   }
