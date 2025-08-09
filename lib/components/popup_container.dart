@@ -27,7 +27,7 @@ class PopupContainer extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: const Color(0xB2000000),
+          color: Colors.black.withOpacity(0.7),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(children: [
