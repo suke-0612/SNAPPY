@@ -9,9 +9,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int currentPage = 1;
-  int totalPages = 5;
+  int currentPage = 1; // 最初のページ番号
+  int totalPages = 20; // そうページ数
 
+  //currentPageを引数の値に更新する関数．
   void _onPageChanged(int page) {
     setState(() {
       currentPage = page;
