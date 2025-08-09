@@ -11,9 +11,15 @@ class Settings extends StatelessWidget {
         children: [
           Expanded(
             child: Center(
-              child: Text(
-                'ここに設定の内容',
-                style: TextStyle(color: Colors.white),
+              child: Column(
+                children: [
+                  Text(
+                    'カテゴリの追加',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  ),
+                  SizedBox(height: 16.0),
+                  AddCategoryForm(),
+                ],
               ),
             ),
           ),
