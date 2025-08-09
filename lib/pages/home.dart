@@ -9,7 +9,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // 既存のフィールドはそのまま
+  String _searchQuery = '';
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
   bool _loading = true;
@@ -17,11 +17,9 @@ class _HomeState extends State<Home> {
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
 
-  // ページネーション追加
   int _currentPage = 1;
   final int _itemsPerPage = 10;
 
-  // 現在のページに表示するアイテムを切り出す
   List<ItemData> get _pagedItems {
     final allItems = _itemsFromScreenshots;
     final start = (_currentPage - 1) * _itemsPerPage;
@@ -29,16 +27,20 @@ class _HomeState extends State<Home> {
     return allItems.sublist(start, end);
   }
 
-  // AssetEntity を ItemsView 用の ItemData に変換
   List<ItemData> get _itemsFromScreenshots {
-    return _screenshots.map((asset) {
+    final filtered = _screenshots.where((asset) {
+      final path = asset.relativePath?.toLowerCase() ?? '';
+      return path.contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    return filtered.map((asset) {
       return ItemData(
         id: asset.id,
-        imagePath: '', // AssetEntityから画像取得するので空文字でOK
+        imagePath: '',
         text: asset.relativePath ?? 'No Path',
         onTapPopupContent:
             Text('Asset ID: ${asset.id}\nパス: ${asset.relativePath ?? "不明"}'),
-        assetEntity: asset, // これを追加した ItemData クラスを使う想定
+        assetEntity: asset,
       );
     }).toList();
   }
@@ -229,6 +231,17 @@ class _HomeState extends State<Home> {
     return BaseScreen(
       child: Column(
         children: [
+          Container(
+            margin: const EdgeInsets.all(10.0),
+            child: InputSearch(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                  _currentPage = 1;
+                });
+              },
+            ),
+          ),
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
@@ -249,8 +262,6 @@ class _HomeState extends State<Home> {
                     ),
                   ),
           ),
-
-          // ここにページネーションを追加
           if (!_loading && totalPages > 1)
             Pagination(
               currentPage: _currentPage,
