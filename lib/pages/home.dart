@@ -9,6 +9,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  static List<String> tags = ["all", "map", "train", "things"];
+  String selectedTag = tags.first;
+
+  void _onTagSelected(String tag) {
+    setState(() {
+      selectedTag = tag;
+    });
+  }
   String _searchQuery = '';
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
