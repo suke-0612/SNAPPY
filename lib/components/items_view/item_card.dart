@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 
+import 'package:snappy/importer.dart';
+
 class ItemCard extends StatelessWidget {
   final String text;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Uint8List? thumbnailBytes;
+  final VoidCallback? onEdit;
 
   const ItemCard({
     super.key,
@@ -15,6 +18,7 @@ class ItemCard extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.thumbnailBytes,
+    this.onEdit,
   });
 
   @override
@@ -41,7 +45,6 @@ class ItemCard extends StatelessWidget {
                   )
                 else
                   Container(color: Colors.grey),
-
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Container(
@@ -58,6 +61,54 @@ class ItemCard extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(8),
+                    child: IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          backgroundColor: Colors.white,
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => Padding(
+                            padding: EdgeInsets.only(
+                              left: 24.0,
+                              right: 24.0,
+                              top: 24.0,
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  24.0,
+                            ),
+                            child: SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight:
+                                      MediaQuery.of(context).size.height * 0.5,
+                                ),
+                                child: EditItemInfoForm(
+                                  initialTitle: text,
+                                  initialCategory: 'その他',
+                                  initialDescription: '既存の説明',
+                                  onSubmit: () {
+                                    if (onEdit != null) {
+                                      onEdit!();
+                                    }
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      tooltip: 'Edit',
+                      splashRadius: 20,
                     ),
                   ),
                 ),
