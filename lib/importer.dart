@@ -18,6 +18,6 @@ export 'package:photo_manager/photo_manager.dart';
 export 'package:snappy/api.dart';
 export 'package:snappy/database/db.dart';
 export 'package:snappy/models/schema.dart';
-
+export 'package:snappy/components/add_category_form.dart';
 export 'package:flutter/src/services/message_codec.dart';
 export 'package:isar/isar.dart';
