@@ -21,6 +21,9 @@ class _HomeState extends State<Home> {
   void _onPageChanged(int page) {
     setState(() {
       currentPage = page;
+    });
+  }
+
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
   bool _loading = true;
