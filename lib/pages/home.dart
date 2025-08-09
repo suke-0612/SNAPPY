@@ -9,22 +9,25 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int currentPage = 1; // 最初のページ番号
-  int totalPages = 20; // 総ページ数
-
-  //currentPageを引数の値に更新する関数．
-  void _onPageChanged(int page) {
-    setState(() {
-      currentPage = page;
-    });
-  }
-
+  // 既存のフィールドはそのまま
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
   bool _loading = true;
 
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
+
+  // ページネーション追加
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
+
+  // 現在のページに表示するアイテムを切り出す
+  List<ItemData> get _pagedItems {
+    final allItems = _itemsFromScreenshots;
+    final start = (_currentPage - 1) * _itemsPerPage;
+    final end = (_currentPage * _itemsPerPage).clamp(0, allItems.length);
+    return allItems.sublist(start, end);
+  }
 
   // AssetEntity を ItemsView 用の ItemData に変換
   List<ItemData> get _itemsFromScreenshots {
@@ -221,6 +224,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final totalPages = (_itemsFromScreenshots.length / _itemsPerPage).ceil();
+
     return BaseScreen(
       child: Column(
         children: [
@@ -230,7 +235,7 @@ class _HomeState extends State<Home> {
                 ? _loading
                     ? const Center(child: CircularProgressIndicator())
                     : ItemsView(
-                        items: _itemsFromScreenshots,
+                        items: _pagedItems,
                         selectedItems: _selectedIds,
                         isSelectionMode: _isSelectionMode,
                         onItemTap: _handleTap,
@@ -244,6 +249,18 @@ class _HomeState extends State<Home> {
                     ),
                   ),
           ),
+
+          // ここにページネーションを追加
+          if (!_loading && totalPages > 1)
+            Pagination(
+              currentPage: _currentPage,
+              totalPages: totalPages,
+              onPageChanged: (page) {
+                setState(() {
+                  _currentPage = page;
+                });
+              },
+            ),
         ],
       ),
     );
