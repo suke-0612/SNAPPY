@@ -9,7 +9,8 @@ Future<void> uploadFilesWithTags(
     List<AssetEntity> assets, List<List<String>> tags) async {
   print(
       'Uploading files with tags: ${assets.length} assets, ${tags.length} tags');
-  var uri = Uri.parse('http://172.26.62.30:8080/ocr/upload-and-classify-batch');
+  var uri = Uri.parse(
+      'https://snappy-backend-7yyq.onrender.com/ocr/upload-and-classify-test');
   var request = http.MultipartRequest('POST', uri);
 
   // ファイルをMultipartFileに変換して追加
@@ -25,16 +26,13 @@ Future<void> uploadFilesWithTags(
   }
 
   // tags を JSON 文字列にして fields にセット
-  // request.fields['tags'] = jsonEncode(tags);
+  request.fields['tags'] = jsonEncode(tags);
 
   // リクエスト送信
   final response = await request.send();
 
-  print('API Response: ${response}');
-
   if (response.statusCode == 200) {
     final responseBody = await response.stream.bytesToString();
-    // JSONパースしてDBに保存など処理
     final decoded = jsonDecode(responseBody);
     await saveApiResponseToIsar(decoded);
   } else {
@@ -43,15 +41,22 @@ Future<void> uploadFilesWithTags(
 }
 
 Future<void> saveApiResponseToIsar(dynamic jsonResponse) async {
+  print('Saving API response to Isar');
+  print('Response: $jsonResponse');
   final isar = await openIsarInstance();
 
-  // 例: jsonResponseがリストなら
-  final screenshots = (jsonResponse as List).map((item) {
+  // jsonResponseがMapの場合、'results'キーからリストを取得
+  final List<dynamic> results = jsonResponse['results'] ?? [];
+
+  final screenshots = results.map((item) {
     return Screenshot()
-      ..assetId = item['assetId']
-      ..filePath = item['filePath']
-      ..createDate = DateTime.parse(item['createDate']);
-    // 他のフィールドもあればセット
+      // APIの返却に合わせてassetId等は取得するかどうか調整してください
+      ..assetId = item['assetId'] ?? ''
+      ..filePath = item['filePath'] ?? ''
+      ..createDate = item.containsKey('createDate')
+          ? DateTime.parse(item['createDate'])
+          : DateTime.now(); // createDateが無ければ今日時で代用
+    // 必要な他のフィールドもここでセット
   }).toList();
 
   await isar.writeTxn(() async {
