@@ -49,8 +49,7 @@ class Pagination extends StatelessWidget {
                 height: 35,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color:
-                      currentPage == pageIndex ? Colors.blue : Colors.grey[300],
+                  color: currentPage == pageIndex ? Colors.black : Colors.white,
                   borderRadius: BorderRadius.circular(4.0),
                 ),
                 child: Text(
