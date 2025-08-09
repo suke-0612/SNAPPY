@@ -6,15 +6,14 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const BaseScreen(
+    List<String> tags = ["all", "things", "map", "train"];
+
+    return BaseScreen(
       child: Column(
         children: [
           Expanded(
             child: Center(
-              child: Text(
-                'ここにホームの内容',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: SelectTagPullButton(tags: tags),
             ),
           ),
         ],
