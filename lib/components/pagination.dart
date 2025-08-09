@@ -41,7 +41,7 @@ class Pagination extends StatelessWidget {
     int start = (currentPage - 1).clamp(2, totalPages - 1);
     int end = (currentPage + 1).clamp(2, totalPages - 1);
 
-    if (currentPage >= totalPages - 1) {
+    if (currentPage >= totalPages - 1 && (currentPage - 2) >= 2 && (currentPage - 2) <= totalPages - 1) {
       pages.add(_buildPageButton(currentPage - 2));
     }
 
