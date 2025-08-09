@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/api.dart';
+import 'package:snappy/components/grid_list_switch.dart';
 import 'package:snappy/database/db.dart';
 import 'package:snappy/importer.dart';
 import 'package:snappy/models/schema.dart';
@@ -101,10 +102,11 @@ class _HomeState extends State<Home> {
 
     // APIにファイルとタグを送る処理を呼ぶ
     try {
-      await uploadFilesWithTags(assets.sublist(0, 5), [
-        ['tag1', 'tag1の説明'],
-        ['tag2', 'tag2の説明'],
-      ]);
+      // TODO: 後で復活
+      // await uploadFilesWithTags(assets.sublist(0, 5), [
+      //   ['tag1', 'tag1の説明'],
+      //   ['tag2', 'tag2の説明'],
+      // ]);
     } catch (e) {
       print('API送信失敗: $e');
     }
@@ -122,31 +124,7 @@ class _HomeState extends State<Home> {
             child: _hasAccess
                 ? _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                        ),
-                        itemCount: _screenshots.length,
-                        itemBuilder: (context, index) {
-                          return FutureBuilder<Uint8List?>(
-                            future: _screenshots[index].thumbnailDataWithSize(
-                              const ThumbnailSize.square(200),
-                            ),
-                            builder: (_, snapshot) {
-                              if (snapshot.connectionState ==
-                                      ConnectionState.done &&
-                                  snapshot.hasData) {
-                                return Image.memory(
-                                  snapshot.data!,
-                                  fit: BoxFit.cover,
-                                );
-                              }
-                              return Container(color: Colors.grey);
-                            },
-                          );
-                        },
-                      )
+                    : ImageListGridSwitcher(assets: _screenshots)
                 : Center(
                     child: Text(
                       "スクリーンショットマネージャーは、\n"
