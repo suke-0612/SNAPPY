@@ -1,11 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:snappy/api.dart';
-import 'package:snappy/components/grid_list_switch.dart';
-import 'package:snappy/database/db.dart';
 import 'package:snappy/importer.dart';
-import 'package:snappy/models/schema.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -15,7 +9,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   static List<String> tags = ["all", "map", "train", "things"];
   String selectedTag = tags.first;
 
@@ -24,10 +17,41 @@ class _HomeState extends State<Home> {
       selectedTag = tag;
     });
   }
-  
+  String _searchQuery = '';
   bool _hasAccess = false;
   List<AssetEntity> _screenshots = [];
   bool _loading = true;
+
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
+
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
+
+  List<ItemData> get _pagedItems {
+    final allItems = _itemsFromScreenshots;
+    final start = (_currentPage - 1) * _itemsPerPage;
+    final end = (_currentPage * _itemsPerPage).clamp(0, allItems.length);
+    return allItems.sublist(start, end);
+  }
+
+  List<ItemData> get _itemsFromScreenshots {
+    final filtered = _screenshots.where((asset) {
+      final path = asset.relativePath?.toLowerCase() ?? '';
+      return path.contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    return filtered.map((asset) {
+      return ItemData(
+        id: asset.id,
+        imagePath: '',
+        text: asset.relativePath ?? 'No Path',
+        onTapPopupContent:
+            Text('Asset ID: ${asset.id}\nパス: ${asset.relativePath ?? "不明"}'),
+        assetEntity: asset,
+      );
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -90,14 +114,10 @@ class _HomeState extends State<Home> {
       orElse: () => albums.first,
     );
 
-    final assets = await screenshotAlbum.getAssetListPaged(
-      page: 0,
-      size: 50,
-    );
+    final assets = await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
 
     final isar = await openIsarInstance();
 
-    // 端末からの画像情報をDBに一旦保存
     final screenshots = assets
         .where((asset) => asset.relativePath != null)
         .map((asset) => Screenshot()
@@ -120,30 +140,146 @@ class _HomeState extends State<Home> {
     } catch (e) {
       print('API送信失敗: $e');
     }
+
     setState(() {
       _screenshots = assets;
     });
   }
 
+  void _handleTap(ItemData item) {
+    if (_isSelectionMode) {
+      setState(() {
+        if (_selectedIds.contains(item.id)) {
+          _selectedIds.remove(item.id);
+          if (_selectedIds.isEmpty) _isSelectionMode = false;
+        } else {
+          _selectedIds.add(item.id);
+        }
+      });
+    } else {
+      _showPopup(item.onTapPopupContent);
+    }
+  }
+
+  void _handleLongPress(ItemData item) {
+    if (!_isSelectionMode) {
+      setState(() {
+        _isSelectionMode = true;
+        _selectedIds.add(item.id);
+      });
+    }
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedIds.clear();
+    });
+  }
+
+  void _deleteSelectedItems() {
+    setState(() {
+      // AssetEntityのリストからIDに一致するものを除去
+      _screenshots.removeWhere((asset) => _selectedIds.contains(asset.id));
+      _exitSelectionMode();
+    });
+    print('削除が実行されました: $_selectedIds');
+  }
+
+  void _showPopup(Widget content) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: content,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionPanel() {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      color: Colors.black.withOpacity(0.1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: _exitSelectionMode,
+              ),
+              Text(
+                '${_selectedIds.length}個選択中',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.white),
+            onPressed: _deleteSelectedItems,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalPages = (_itemsFromScreenshots.length / _itemsPerPage).ceil();
+
     return BaseScreen(
       child: Column(
         children: [
+          Container(
+            margin: const EdgeInsets.all(10.0),
+            child: InputSearch(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                  _currentPage = 1;
+                });
+              },
+            ),
+          ),
+          if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
                 ? _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : ImageListGridSwitcher(assets: _screenshots)
+                    : ItemsView(
+                        items: _pagedItems,
+                        selectedItems: _selectedIds,
+                        isSelectionMode: _isSelectionMode,
+                        onItemTap: _handleTap,
+                        onItemLongPress: _handleLongPress,
+                      )
                 : Center(
                     child: Text(
-                      "スクリーンショットマネージャーは、\n"
-                      "アプリの設定から有効にしてください。",
+                      "スクリーンショットマネージャーは、\nアプリの設定から有効にしてください。",
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ),
           ),
+          if (!_loading && totalPages > 1)
+            Pagination(
+              currentPage: _currentPage,
+              totalPages: totalPages,
+              onPageChanged: (page) {
+                setState(() {
+                  _currentPage = page;
+                });
+              },
+            ),
         ],
       ),
     );
