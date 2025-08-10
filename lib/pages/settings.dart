@@ -23,8 +23,14 @@ class Settings extends StatelessWidget {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  const AddCategoryForm(),
+                  SizedBox(height: 16.0),
+                  AddCategoryForm(),
+                  Text(
+                    'カテゴリの削除',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  ),
+                  SizedBox(height: 16.0),
+                  Expanded(child: DeleteCategory())
                 ],
               ),
             ),

@@ -31,6 +31,8 @@ class _HomeState extends State<Home> with RouteAware {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
 
+  final ScrollController _scrollController = ScrollController();
+
   // --- ページング用データ ---
   List<ItemData> get _pagedItems {
     final allItems = _itemsFromScreenshots;
@@ -58,6 +60,8 @@ class _HomeState extends State<Home> with RouteAware {
       return ItemData(
         id: asset.id,
         text: dbData?.title ?? '',
+        category: dbData?.tag ?? 'その他',
+        description: dbData?.description ?? 'なし',
         assetEntity: asset,
         onTapPopupContent: Text('Asset ID: ${asset.id}\n'
             'タグ: ${dbData?.tag ?? "なし"}\n'
@@ -79,7 +83,7 @@ class _HomeState extends State<Home> with RouteAware {
     // 写真の変更検知セットアップ
     PhotoManager.addChangeCallback((_) async {
       if (_hasAccess) {
-        await _loadAndSaveScreenshots();
+        await _loadAndDisplayAllScreenshotsAndSync();
       }
     });
     PhotoManager.startChangeNotify();
@@ -103,12 +107,13 @@ class _HomeState extends State<Home> with RouteAware {
   void dispose() {
     PhotoManager.stopChangeNotify();
     PhotoManager.removeChangeCallback((MethodCall call) {});
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadTags() async {
     final tags = await getAllTags();
-    print(tags);
+    // print(tags);
     setState(() {
       for (var tag in tags) {
         if (!customTags.contains(tag.name) && !defaultTags.contains(tag.name)) {
@@ -118,10 +123,36 @@ class _HomeState extends State<Home> with RouteAware {
     });
   }
 
+  Future<void> loadScreenshotsFromDb() async {
+    final albums = await PhotoManager.getAssetPathList(
+      type: RequestType.image,
+      filterOption: FilterOptionGroup()
+        ..addOrderOption(
+            OrderOption(type: OrderOptionType.createDate, asc: false)),
+    );
+
+    final screenshotAlbum = albums.firstWhere(
+      (album) => album.name.toLowerCase().contains("screenshot"),
+      orElse: () => albums.first,
+    );
+
+    final assets = await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
+
+    final existingAssetIds = _isarScreenshotMap.keys.toSet();
+
+    final filteredAssets =
+        assets.where((asset) => existingAssetIds.contains(asset.id)).toList();
+
+    setState(() {
+      _screenshots = filteredAssets;
+    });
+  }
+
   /// DBから全スクショ情報を取得してMapに変換し更新
   Future<void> _refreshIsarScreenshotMap() async {
     final isar = await openIsarInstance();
     final all = await isar.screenshots.where().findAll();
+    print(all.map((e) => e.title).toList());
     setState(() {
       _isarScreenshotMap = {for (var s in all) s.assetId: s};
     });
@@ -137,7 +168,7 @@ class _HomeState extends State<Home> with RouteAware {
       setState(() {
         _hasAccess = true;
       });
-      await _loadAndSaveScreenshots();
+      await _loadAndDisplayAllScreenshotsAndSync();
     } else {
       // 権限拒否時のUI案内（リトライは一度だけにするなど検討）
       await PhotoManager.openSetting();
@@ -146,7 +177,7 @@ class _HomeState extends State<Home> with RouteAware {
         setState(() {
           _hasAccess = true;
         });
-        await _loadAndSaveScreenshots();
+        await _loadAndDisplayAllScreenshotsAndSync();
       } else {
         setState(() {
           _hasAccess = false;
@@ -158,8 +189,7 @@ class _HomeState extends State<Home> with RouteAware {
     setState(() => _loading = false);
   }
 
-  /// 写真を読み込み、DBに保存し、APIに新規写真のみ送信
-  Future<void> _loadAndSaveScreenshots() async {
+  Future<void> _loadAndDisplayAllScreenshotsAndSync() async {
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.image,
       filterOption: FilterOptionGroup()
@@ -172,26 +202,28 @@ class _HomeState extends State<Home> with RouteAware {
       orElse: () => albums.first,
     );
 
-    final assets = await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
+    final allAssets =
+        await screenshotAlbum.getAssetListPaged(page: 0, size: 50);
+
     final isar = await openIsarInstance();
 
-    // まずDBの既存データを読み込む
+    // DBのスクショ情報を取得してマップにセット
     final existingScreenshots = await isar.screenshots.where().findAll();
-    final existingAssetIds = existingScreenshots.map((e) => e.assetId).toSet();
+    final Map<String, Screenshot> screenshotMap = {
+      for (var s in existingScreenshots) s.assetId: s
+    };
 
-    // 表示用に、DBにあるassetIdに対応するAssetEntityをassetsから取り出す
-    final screenshotsToDisplay =
-        assets.where((asset) => existingAssetIds.contains(asset.id)).toList();
-
-    // ここでまずDBの既存データに対応する写真だけ表示
+    // 画面表示用に全端末写真をセット
     setState(() {
-      _screenshots = screenshotsToDisplay;
-      _currentPage = 1;
+      _isarScreenshotMap = screenshotMap; // ここでDBデータを事前にセット
+      _screenshots = allAssets;
     });
 
-    // DBにない新規写真だけ抽出
-    final newAssetsAll =
-        assets.where((asset) => !existingAssetIds.contains(asset.id)).toList();
+    // DBにない新規写真を抽出
+    final existingAssetIds = screenshotMap.keys.toSet();
+    final newAssetsAll = allAssets
+        .where((asset) => !existingAssetIds.contains(asset.id))
+        .toList();
     final newAssets = newAssetsAll.sublist(0, min(5, newAssetsAll.length));
 
     if (newAssets.isNotEmpty) {
@@ -202,32 +234,26 @@ class _HomeState extends State<Home> with RouteAware {
           ['things', ''],
           ['others', ''],
         ];
-        await getAllTags().then((tags) {
-          for (var tag in tags) {
-            apiTags.add([tag.name, tag.description]);
-          }
-        });
+        final tags = await getAllTags();
+        for (var tag in tags) {
+          apiTags.add([tag.name, tag.description]);
+        }
+
         await uploadFilesWithTags(newAssets, apiTags);
+
+        // API成功後にDBのデータ再取得してマップ更新
+        await _refreshIsarScreenshotMap();
       } catch (e) {
         print('API送信失敗: $e');
-        return;
       }
     }
+  }
 
-    // API成功 or 新規写真なしならDBの最新データを再取得し画面更新
+  Future<void> refreshData() async {
+    print('Refreshing data... home');
     await _refreshIsarScreenshotMap();
-
-    final allScreenshots = await isar.screenshots.where().findAll();
-    final allAssetIds = allScreenshots.map((e) => e.assetId).toSet();
-
-    // assetsからDBにあるものだけ抽出して表示用にセット
-    final updatedScreenshots =
-        assets.where((asset) => allAssetIds.contains(asset.id)).toList();
-
-    setState(() {
-      _screenshots = updatedScreenshots;
-      _currentPage = 1;
-    });
+    await _loadAndDisplayAllScreenshotsAndSync();
+    setState(() {});
   }
 
   void _handleTap(ItemData item) {
@@ -370,18 +396,33 @@ class _HomeState extends State<Home> with RouteAware {
                     },
                   ),
                 ),
-
-                // ローディングアイコン部分
-                if (_loading)
+              ],
+            ),
+          ),
+          // ローディングアイコン部分
+          if (_loading)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '画像を読み込み中...',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Container(
                     margin: const EdgeInsets.only(left: 8.0),
                     width: 24,
                     height: 24,
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
@@ -391,6 +432,8 @@ class _HomeState extends State<Home> with RouteAware {
                     isSelectionMode: _isSelectionMode,
                     onItemTap: _handleTap,
                     onItemLongPress: _handleLongPress,
+                    scrollController: _scrollController,
+                    onRefresh: refreshData, // ここで渡す
                   )
                 : Center(
                     child: Text(
@@ -408,6 +451,11 @@ class _HomeState extends State<Home> with RouteAware {
                 setState(() {
                   _currentPage = page;
                 });
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(
+                    0.0,
+                  );
+                }
               },
             ),
         ],

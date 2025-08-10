@@ -7,6 +7,8 @@ import 'package:snappy/importer.dart';
 class ItemData {
   final String id;
   final String text;
+  final String category;
+  final String description;
   final AssetEntity? assetEntity;
   final Widget? onTapPopupContent; // ポップアップのコンテンツを表示するためのコールバック
   final Uint8List? thumbnailBytes;
@@ -14,6 +16,8 @@ class ItemData {
   ItemData({
     required this.id,
     required this.text,
+    required this.category,
+    required this.description,
     this.assetEntity,
     this.thumbnailBytes,
     required this.onTapPopupContent,
