@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:snappy/importer.dart';
 
 class ItemCard extends StatelessWidget {
-  final String text;
+  final ItemData item;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -13,7 +13,7 @@ class ItemCard extends StatelessWidget {
 
   const ItemCard({
     super.key,
-    required this.text,
+    required this.item,
     required this.isSelected,
     this.onTap,
     this.onLongPress,
@@ -54,12 +54,14 @@ class ItemCard extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     child: Center(
                       child: Text(
-                        text,
+                        item.text,
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 16,
                         ),
                         textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -92,14 +94,15 @@ class ItemCard extends StatelessWidget {
                                       MediaQuery.of(context).size.height * 0.5,
                                 ),
                                 child: EditItemInfoForm(
-                                  initialTitle: text,
-                                  initialCategory: 'その他',
-                                  initialDescription: '既存の説明',
+                                  item: item,
                                   onSubmit: () {
                                     if (onEdit != null) {
-                                      onEdit!();
+                                      onEdit!(); // ここでHomeのDB再取得処理が呼ばれる
                                     }
                                     Navigator.of(context).pop();
+                                  },
+                                  onRefresh: () async {
+                                    // ここは空でもOK、onEdit()側で全部やるので
                                   },
                                 ),
                               ),

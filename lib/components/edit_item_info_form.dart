@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:snappy/importer.dart';
 
 class EditItemInfoForm extends StatefulWidget {
-  final String initialTitle;
-  final String initialCategory;
-  final String initialDescription;
+  final ItemData item;
   final VoidCallback onSubmit;
+  final Future<void> Function() onRefresh;
 
   const EditItemInfoForm({
     super.key,
-    required this.initialTitle,
-    required this.initialCategory,
-    required this.initialDescription,
+    required this.item,
     required this.onSubmit,
+    required this.onRefresh,
   });
 
   @override
@@ -33,14 +31,14 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.initialTitle);
+    _titleController = TextEditingController(text: widget.item.text);
 
     // initialCategoryでコントローラーと状態変数を初期化
-    _categoryController = TextEditingController(text: widget.initialCategory);
-    _selectedCategory = widget.initialCategory;
+    _categoryController = TextEditingController(text: widget.item.category);
+    _selectedCategory = widget.item.category;
 
     _descriptionController =
-        TextEditingController(text: widget.initialDescription);
+        TextEditingController(text: widget.item.description);
 
     // initialCategoryが選択肢にない場合には最初の選択肢を設定
     if (!_categoryOptions.contains(_selectedCategory)) {
@@ -57,17 +55,44 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      print("編集ボタンが押されました");
-      print("タイトル: ${_titleController.text}");
-      print("カテゴリ: ${_categoryController.text}"); // コントローラーから値を取得
-      print("説明: ${_descriptionController.text}");
-      widget.onSubmit();
+      final isar = await openIsarInstance();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('編集内容を保存しました')),
-      );
+      await isar.writeTxn(() async {
+        final screenshot = await isar.screenshots
+            .filter()
+            .assetIdEqualTo(widget.item.id)
+            .findFirst();
+
+        if (screenshot != null) {
+          print('Before update title: ${screenshot.title}');
+          screenshot.title = _titleController.text;
+          screenshot.tag = _categoryController.text;
+          screenshot.description = _descriptionController.text;
+          await isar.screenshots.put(screenshot);
+        }
+      });
+
+      // DB更新後に再取得して最新タイトルを取得
+      final updatedScreenshot = await isar.screenshots
+          .filter()
+          .assetIdEqualTo(widget.item.id)
+          .findFirst();
+
+      print('After update title: ${updatedScreenshot?.title}');
+
+      // 編集完了後にDBの最新データを再取得
+      if (widget.onRefresh != null) {
+        print('Refreshing data...');
+        await widget.onRefresh!();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('編集内容を保存しました')));
+      }
+      widget.onSubmit();
     }
   }
 
@@ -169,7 +194,9 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                 ),
                 const SizedBox(height: 24),
                 CustomButton(
-                  onPressed: _submitForm,
+                  onPressed: () async {
+                    await _submitForm();
+                  },
                   label: "確定",
                   backgroundColor: Colors.black,
                   fontColor: Colors.white,

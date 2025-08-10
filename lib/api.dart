@@ -35,7 +35,7 @@ Future<void> uploadFilesWithTags(
     final responseBody = await response.stream.bytesToString();
     final decoded = jsonDecode(responseBody);
     await saveApiResponseToIsar(decoded, assets);
-    print(decoded);
+    // print(decoded);
   } else {
     throw Exception('Failed to upload files');
   }

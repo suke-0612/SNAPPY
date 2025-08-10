@@ -102,6 +102,8 @@ class _WantListState extends State<WantList> {
         onAmazonSearch: () => _openAmazonSearch(screenshot.title!),
         onClose: () => Navigator.of(context).pop(),
       ),
+      category: '',
+      description: '',
     );
   }
 
