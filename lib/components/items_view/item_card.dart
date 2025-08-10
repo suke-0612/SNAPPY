@@ -60,6 +60,8 @@ class ItemCard extends StatelessWidget {
                           fontSize: 16,
                         ),
                         textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
