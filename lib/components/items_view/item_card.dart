@@ -5,6 +5,8 @@ import 'package:snappy/importer.dart';
 
 class ItemCard extends StatelessWidget {
   final String text;
+  final String category;
+  final String description;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -14,6 +16,8 @@ class ItemCard extends StatelessWidget {
   const ItemCard({
     super.key,
     required this.text,
+    required this.category,
+    required this.description,
     required this.isSelected,
     this.onTap,
     this.onLongPress,
@@ -93,8 +97,8 @@ class ItemCard extends StatelessWidget {
                                 ),
                                 child: EditItemInfoForm(
                                   initialTitle: text,
-                                  initialCategory: 'その他',
-                                  initialDescription: '既存の説明',
+                                  initialCategory: category,
+                                  initialDescription: description,
                                   onSubmit: () {
                                     if (onEdit != null) {
                                       onEdit!();

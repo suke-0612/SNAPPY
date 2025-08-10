@@ -61,6 +61,8 @@ class _ItemsViewState extends State<ItemsView> {
           return ItemCard(
             key: ValueKey(item.id),
             text: item.text,
+            category: item.category,
+            description: item.description,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),
             onLongPress: () => widget.onItemLongPress(item),
@@ -70,6 +72,8 @@ class _ItemsViewState extends State<ItemsView> {
           return ItemCard(
             key: ValueKey(item.id),
             text: item.text,
+            category: item.category,
+            description: item.description,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),
             onLongPress: () => widget.onItemLongPress(item),

@@ -58,6 +58,8 @@ class _HomeState extends State<Home> {
       return ItemData(
         id: asset.id,
         text: dbData?.title ?? '',
+        category: dbData?.tag ?? 'その他',
+        description: dbData?.description ?? 'なし',
         onTapPopupContent: Text('Asset ID: ${asset.id}\n'
             'タグ: ${dbData?.tag ?? "なし"}\n'
             'タイトル: ${dbData?.title ?? "なし"}\n'
