@@ -4,9 +4,7 @@ import 'dart:typed_data';
 import 'package:snappy/importer.dart';
 
 class ItemCard extends StatelessWidget {
-  final String text;
-  final String category;
-  final String description;
+  final ItemData item;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -15,9 +13,7 @@ class ItemCard extends StatelessWidget {
 
   const ItemCard({
     super.key,
-    required this.text,
-    required this.category,
-    required this.description,
+    required this.item,
     required this.isSelected,
     this.onTap,
     this.onLongPress,
@@ -58,7 +54,7 @@ class ItemCard extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     child: Center(
                       child: Text(
-                        text,
+                        item.text,
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 16,
@@ -96,9 +92,7 @@ class ItemCard extends StatelessWidget {
                                       MediaQuery.of(context).size.height * 0.5,
                                 ),
                                 child: EditItemInfoForm(
-                                  initialTitle: text,
-                                  initialCategory: category,
-                                  initialDescription: description,
+                                  item: item,
                                   onSubmit: () {
                                     if (onEdit != null) {
                                       onEdit!();
