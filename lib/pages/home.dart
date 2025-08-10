@@ -87,7 +87,7 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     PhotoManager.stopChangeNotify();
-    PhotoManager.removeChangeCallback(() {} as ValueChanged<MethodCall>);
+    PhotoManager.removeChangeCallback((MethodCall call) {});
     super.dispose();
   }
 
