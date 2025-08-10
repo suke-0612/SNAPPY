@@ -66,7 +66,7 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.settings),
+            leading: const Icon(Icons.shopping_cart),
             title: const Text('欲しいものリスト'),
             onTap: () {
               Navigator.pop(context);

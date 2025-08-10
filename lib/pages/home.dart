@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:snappy/app.dart';
 import 'package:snappy/components/popup_container.dart';
 import 'package:snappy/importer.dart';
+import 'dart:math';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -96,7 +97,7 @@ class _HomeState extends State<Home> with RouteAware {
   @override
   void dispose() {
     PhotoManager.stopChangeNotify();
-    PhotoManager.removeChangeCallback(() {} as ValueChanged<MethodCall>);
+    PhotoManager.removeChangeCallback((MethodCall call) {});
     super.dispose();
   }
 
