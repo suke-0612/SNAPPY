@@ -18,7 +18,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Image(
               image: AssetImage('assets/images/snappy_logo.png'),
-              height: kToolbarHeight,
+              height: kToolbarHeight * 0.5,
             ),
           ],
         ),
