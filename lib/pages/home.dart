@@ -108,7 +108,7 @@ class _HomeState extends State<Home> with RouteAware {
 
   Future<void> _loadTags() async {
     final tags = await getAllTags();
-    print(tags);
+    // print(tags);
     setState(() {
       for (var tag in tags) {
         if (!customTags.contains(tag.name) && !defaultTags.contains(tag.name)) {
