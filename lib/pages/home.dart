@@ -31,6 +31,8 @@ class _HomeState extends State<Home> with RouteAware {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
 
+  final ScrollController _scrollController = ScrollController();
+
   // --- ページング用データ ---
   List<ItemData> get _pagedItems {
     final allItems = _itemsFromScreenshots;
@@ -105,6 +107,7 @@ class _HomeState extends State<Home> with RouteAware {
   void dispose() {
     PhotoManager.stopChangeNotify();
     PhotoManager.removeChangeCallback((MethodCall call) {});
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -393,18 +396,33 @@ class _HomeState extends State<Home> with RouteAware {
                     },
                   ),
                 ),
-
-                // ローディングアイコン部分
-                if (_loading)
+              ],
+            ),
+          ),
+          // ローディングアイコン部分
+          if (_loading)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '画像を読み込み中...',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Container(
                     margin: const EdgeInsets.only(left: 8.0),
                     width: 24,
                     height: 24,
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
@@ -414,6 +432,7 @@ class _HomeState extends State<Home> with RouteAware {
                     isSelectionMode: _isSelectionMode,
                     onItemTap: _handleTap,
                     onItemLongPress: _handleLongPress,
+                    scrollController: _scrollController,
                     onRefresh: refreshData, // ここで渡す
                   )
                 : Center(
@@ -432,6 +451,11 @@ class _HomeState extends State<Home> with RouteAware {
                 setState(() {
                   _currentPage = page;
                 });
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(
+                    0.0,
+                  );
+                }
               },
             ),
         ],

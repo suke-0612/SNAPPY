@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class Pagination extends StatelessWidget {
   final int currentPage;
@@ -30,41 +29,48 @@ class Pagination extends StatelessWidget {
   List<Widget> _buildPageNumbers() {
     List<Widget> pages = [];
 
-    // 1ページ目を表示
-    pages.add(_buildPageButton(1));
-
-    // 1ページ目と現在のページ範囲の間に省略記号が必要か
-    if (currentPage > 3) {
-      pages.add(_buildEllipsis());
+    // totalPagesが0以下の場合は空のリストを返す
+    if (totalPages <= 0) {
+      return pages;
     }
 
-    // 現在のページの前後1ページを表示
-    int start = (currentPage - 1);
-    int end = (currentPage + 1);
+    // 常に同じ数の要素を表示するための設定
+    const int maxVisibleElements = 7; // 数字ボタン + 省略記号の合計数
 
-    if (currentPage >= totalPages - 1 &&
-        (currentPage - 2) >= 2 &&
-        (currentPage - 2) <= totalPages - 1) {
-      pages.add(_buildPageButton(currentPage - 2));
-    }
-
-    for (int i = start; i <= end; i++) {
-      if (i > 1 && i < totalPages) {
+    // 総ページ数が少ない場合は、すべてのページを表示
+    if (totalPages <= maxVisibleElements) {
+      for (int i = 1; i <= totalPages; i++) {
         pages.add(_buildPageButton(i));
       }
+      return pages;
     }
 
-    if (currentPage <= 2 && (currentPage + 2) <= totalPages) {
-      pages.add(_buildPageButton(currentPage + 2));
-    }
+    // 1ページ目は常に表示
+    pages.add(_buildPageButton(1));
 
-    // 現在のページ範囲と最後のページの間に省略記号が必要か
-    if (currentPage < totalPages - 2) {
+    // 現在のページに基づいて表示パターンを決定
+    if (currentPage <= 4) {
+      // 前半部分の表示 [1] 2 3 4 5 ... 10
+      for (int i = 2; i <= 5; i++) {
+        pages.add(_buildPageButton(i));
+      }
       pages.add(_buildEllipsis());
-    }
-
-    // 最後のページを表示（1ページより多い場合）
-    if (totalPages > 1) {
+      pages.add(_buildPageButton(totalPages));
+    } else if (currentPage >= totalPages - 3) {
+      // 後半部分の表示 1 ... 6 7 8 9 [10]
+      pages.add(_buildEllipsis());
+      for (int i = totalPages - 4; i <= totalPages; i++) {
+        if (i > 1) {
+          pages.add(_buildPageButton(i));
+        }
+      }
+    } else {
+      // 中間部分の表示 1 ... 4 [5] 6 ... 10
+      pages.add(_buildEllipsis());
+      pages.add(_buildPageButton(currentPage - 1));
+      pages.add(_buildPageButton(currentPage));
+      pages.add(_buildPageButton(currentPage + 1));
+      pages.add(_buildEllipsis());
       pages.add(_buildPageButton(totalPages));
     }
 
@@ -82,7 +88,6 @@ class Pagination extends StatelessWidget {
         decoration: BoxDecoration(
           color: currentPage == pageNumber ? Colors.black : Colors.white,
           borderRadius: BorderRadius.circular(4.0),
-          border: Border.all(color: Colors.grey[300]!),
         ),
         child: Text(
           '$pageNumber',
@@ -100,6 +105,7 @@ class Pagination extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       alignment: Alignment.center,
+      width: 44,
       child: const Text(
         '...',
         style: TextStyle(

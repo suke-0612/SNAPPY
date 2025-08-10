@@ -8,6 +8,7 @@ class ItemsView extends StatefulWidget {
   final bool isSelectionMode;
   final Function(ItemData) onItemTap;
   final Function(ItemData) onItemLongPress;
+  final ScrollController? scrollController;
   final Future<void> Function() onRefresh;
 
   const ItemsView({
@@ -17,6 +18,7 @@ class ItemsView extends StatefulWidget {
     required this.isSelectionMode,
     required this.onItemTap,
     required this.onItemLongPress,
+    this.scrollController,
     required this.onRefresh,
   });
 
@@ -41,6 +43,7 @@ class _ItemsViewState extends State<ItemsView> {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      controller: widget.scrollController,
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
