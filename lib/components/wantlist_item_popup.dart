@@ -60,14 +60,47 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        // 上部: タイトル
-        _buildTitleSection(),
-        // 中央: 左に画像、右にボタン
-        _buildContentSection(),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 上部: タイトル
+            _buildTitleSection(),
+            // 中央: 左に画像、右にボタン
+            _buildContentSection(),
+          ],
+        ),
+        // 右上のバツボタン
+        Positioned(
+          top: -10,
+          right: -10,
+          child: GestureDetector(
+            onTap: widget.onClose,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -103,7 +136,7 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 左側: 画像
           if (widget.assetEntity != null)
@@ -173,43 +206,25 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
   /// アクションボタンを構築（右側用）
   Widget _buildActions() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (widget.screenshot.title != null &&
-            widget.screenshot.title!.isNotEmpty)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: widget.onAmazonSearch,
-              icon: const Icon(Icons.shopping_cart, size: 20),
-              label: const Text(
-                'Amazon',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[700],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: TextButton(
-            onPressed: widget.onClose,
-            style: TextButton.styleFrom(
+          child: ElevatedButton.icon(
+            onPressed: widget.onAmazonSearch,
+            icon: const Icon(Icons.shopping_cart, size: 20),
+            label: const Text(
+              'Amazon',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[700],
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            child: const Text(
-              '閉じる',
-              style: TextStyle(fontSize: 14, color: Colors.black),
             ),
           ),
         ),
