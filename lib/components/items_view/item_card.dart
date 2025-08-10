@@ -75,39 +75,10 @@ class ItemCard extends StatelessWidget {
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.white),
                       onPressed: () {
-                        showModalBottomSheet(
-                          backgroundColor: Colors.white,
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => Padding(
-                            padding: EdgeInsets.only(
-                              left: 24.0,
-                              right: 24.0,
-                              top: 24.0,
-                              bottom: MediaQuery.of(context).viewInsets.bottom +
-                                  24.0,
-                            ),
-                            child: SingleChildScrollView(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight:
-                                      MediaQuery.of(context).size.height * 0.5,
-                                ),
-                                child: EditItemInfoForm(
-                                  item: item,
-                                  onSubmit: () {
-                                    if (onEdit != null) {
-                                      onEdit!(); // ここでHomeのDB再取得処理が呼ばれる
-                                    }
-                                    Navigator.of(context).pop();
-                                  },
-                                  onRefresh: () async {
-                                    // ここは空でもOK、onEdit()側で全部やるので
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
+                        showEditItemPopup(
+                          context,
+                          item: item,
+                          onEdit: onEdit,
                         );
                       },
                       tooltip: 'Edit',
