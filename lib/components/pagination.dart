@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class Pagination extends StatelessWidget {
   final int currentPage;
@@ -38,15 +39,17 @@ class Pagination extends StatelessWidget {
     }
 
     // 現在のページの前後1ページを表示
-    int start = (currentPage - 1).clamp(2, totalPages - 1);
-    int end = (currentPage + 1).clamp(2, totalPages - 1);
+    int start = (currentPage - 1);
+    int end = (currentPage + 1);
 
-    if (currentPage >= totalPages - 1 && (currentPage - 2) >= 2 && (currentPage - 2) <= totalPages - 1) {
+    if (currentPage >= totalPages - 1 &&
+        (currentPage - 2) >= 2 &&
+        (currentPage - 2) <= totalPages - 1) {
       pages.add(_buildPageButton(currentPage - 2));
     }
 
     for (int i = start; i <= end; i++) {
-      if (i != 1 && i != totalPages) {
+      if (i > 1 && i < totalPages) {
         pages.add(_buildPageButton(i));
       }
     }
