@@ -18,6 +18,8 @@ class EditItemInfoForm extends StatefulWidget {
 }
 
 class _EditItemInfoFormState extends State<EditItemInfoForm> {
+  List<String> _categoryOptions = [];
+  late Future<void> _loadCategoriesFuture;
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _titleController;
@@ -26,25 +28,35 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
 
   // DropdownButtonの選択値を保持するための状態変数
   late String _selectedCategory;
-  final List<String> _categoryOptions = ['カテゴリ1', 'カテゴリ2', 'カテゴリ3', 'その他'];
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.item.text);
 
-    // initialCategoryでコントローラーと状態変数を初期化
+    _titleController = TextEditingController(text: widget.item.text);
     _categoryController = TextEditingController(text: widget.item.category);
     _selectedCategory = widget.item.category;
-
     _descriptionController =
         TextEditingController(text: widget.item.description);
 
-    // initialCategoryが選択肢にない場合には最初の選択肢を設定
-    if (!_categoryOptions.contains(_selectedCategory)) {
-      _selectedCategory = _categoryOptions.first;
-      _categoryController.text = _selectedCategory;
-    }
+    _loadCategoriesFuture = _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final tags = await getAllTags();
+    final names = tags.map((t) => t.name).toList();
+
+    setState(() {
+      _categoryOptions = names.isNotEmpty
+          ? names + ['location', 'things', 'others']
+          : ['location', 'things', 'others'];
+
+      // 選択カテゴリが存在しなければ最初のタグをセット
+      if (!_categoryOptions.contains(_selectedCategory)) {
+        _selectedCategory = _categoryOptions.first;
+        _categoryController.text = _selectedCategory;
+      }
+    });
   }
 
   @override
