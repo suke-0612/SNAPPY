@@ -6,7 +6,7 @@ class Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const BaseScreen(
+    return BaseScreen(
       child: Column(
         children: [
           Expanded(
@@ -19,6 +19,12 @@ class Settings extends StatelessWidget {
                   ),
                   SizedBox(height: 16.0),
                   AddCategoryForm(),
+                  Text(
+                    'カテゴリの削除',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  ),
+                  SizedBox(height: 16.0),
+                  Expanded(child: DeleteCategory())
                 ],
               ),
             ),
