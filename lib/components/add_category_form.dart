@@ -70,7 +70,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 decoration: const InputDecoration(
                   fillColor: Colors.white,
                   filled: true,
-                  hintText: '例：読書、プログラミング',
+                  hintText: '例：train, book, など',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -112,7 +112,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 decoration: const InputDecoration(
                   fillColor: Colors.white,
                   filled: true,
-                  hintText: '例) 電車の発車時刻、到着時刻、駅名などが含まれます。',
+                  hintText: '例:発車時刻、到着時刻、駅名などが含まれます。',
                 ),
                 maxLines: 4,
               ),
@@ -122,7 +122,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 child: CustomButton(
                   label: '作成',
                   onPressed: _submitForm,
-                  backgroundColor: Colors.black,
+                  backgroundColor: const Color(0xFFA1CCA6),
                   fontColor: Colors.white,
                 ),
               ),
