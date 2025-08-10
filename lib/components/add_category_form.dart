@@ -28,6 +28,18 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
       print('カテゴリ名: $categoryName');
       print('説明: $categoryDescription');
 
+      try {
+        saveTags([
+          [categoryName, categoryDescription]
+        ]);
+      } catch (e) {
+        print('Error saving category: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('カテゴリの保存に失敗しました。')),
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('カテゴリを作成しました！')),
       );

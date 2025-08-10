@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:snappy/app.dart';
+import 'package:snappy/components/popup_container.dart';
 import 'package:snappy/importer.dart';
+import 'dart:math';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -8,15 +11,12 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
-  static const List<String> tags = [
-    "all",
-    "location",
-    "things",
-    "train",
-    "others"
-  ];
-  String selectedTag = tags.first;
+class _HomeState extends State<Home> with RouteAware {
+  final List<String> defaultTags = ["all", "location", "things", "others"];
+  List<String> customTags = [];
+  List<String> get allTags => [...defaultTags, ...customTags];
+
+  late String selectedTag;
 
   Map<String, Screenshot> _isarScreenshotMap = {};
   List<AssetEntity> _screenshots = [];
@@ -60,12 +60,12 @@ class _HomeState extends State<Home> {
         text: dbData?.title ?? '',
         category: dbData?.tag ?? 'その他',
         description: dbData?.description ?? 'なし',
+        assetEntity: asset,
         onTapPopupContent: Text('Asset ID: ${asset.id}\n'
             'タグ: ${dbData?.tag ?? "なし"}\n'
             'タイトル: ${dbData?.title ?? "なし"}\n'
             '場所: ${dbData?.location ?? "不明"}\n'
             '説明: ${dbData?.description ?? "なし"}\n'),
-        assetEntity: asset,
       );
     }).toList();
   }
@@ -73,8 +73,10 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    selectedTag = allTags.first;
     // 権限チェックと初期データロードを一括で実行
     _checkPermissionAndLoad();
+    _loadTags();
 
     // 写真の変更検知セットアップ
     PhotoManager.addChangeCallback((_) async {
@@ -85,11 +87,37 @@ class _HomeState extends State<Home> {
     PhotoManager.startChangeNotify();
   }
 
+  // RouteAware: 画面が表示された時
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    _loadTags();
+  }
+
+  // // RouteAware: 別ページから戻ってきた時
+  @override
+  void didPopNext() {
+    _loadTags();
+  }
+
   @override
   void dispose() {
     PhotoManager.stopChangeNotify();
-    PhotoManager.removeChangeCallback(() {} as ValueChanged<MethodCall>);
+    PhotoManager.removeChangeCallback((MethodCall call) {});
     super.dispose();
+  }
+
+  Future<void> _loadTags() async {
+    final tags = await getAllTags();
+    print(tags);
+    setState(() {
+      for (var tag in tags) {
+        if (!customTags.contains(tag.name) && !defaultTags.contains(tag.name)) {
+          customTags.add(tag.name);
+        }
+      }
+    });
   }
 
   /// DBから全スクショ情報を取得してMapに変換し更新
@@ -171,12 +199,16 @@ class _HomeState extends State<Home> {
     if (newAssets.isNotEmpty) {
       print('新しいスクリーンショットが ${newAssets.length} 件あります。');
       try {
-        const apiTags = [
-          ["location", "行きたい場所、泊まりたい場所など。位置情報を持つ。位置情報を返してほしい"],
-          ["train", "時刻表など。どの駅に何時発の電車が、どの駅に何時につくか"],
-          ["things", "ほしいもの"],
-          ["others", "その他のタグ"]
+        List<List<String>> apiTags = [
+          ['location', ''],
+          ['things', ''],
+          ['others', ''],
         ];
+        await getAllTags().then((tags) {
+          for (var tag in tags) {
+            apiTags.add([tag.name, tag.description]);
+          }
+        });
         await uploadFilesWithTags(newAssets, apiTags);
       } catch (e) {
         print('API送信失敗: $e');
@@ -211,7 +243,7 @@ class _HomeState extends State<Home> {
         }
       });
     } else {
-      _showPopup(item.onTapPopupContent);
+      _showPopup(item);
     }
   }
 
@@ -240,14 +272,33 @@ class _HomeState extends State<Home> {
     print('削除が実行されました: $_selectedIds');
   }
 
-  void _showPopup(Widget content) {
+  void _showPopup(ItemData item) {
+    final dbData = _isarScreenshotMap[item.id];
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.7), // 背景を半透明黒にして暗くする
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: content,
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40), // 横の余白で幅調整
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400), // 最大幅400pxに制限
+          child: PopupContainer(
+            assetEntity: item.assetEntity!,
+            onPressedAddMap: () {
+              Navigator.of(context).pop();
+              // 地図に追加処理
+            },
+            onPressedEdit: () {
+              Navigator.of(context).pop();
+              // 編集処理
+            },
+            onPressedDelete: () async {
+              Navigator.of(context).pop();
+              // await _deleteScreenshot(item.id);
+            },
+            title: dbData?.title,
+            location: dbData?.location ?? '',
+          ),
         ),
       ),
     );
@@ -297,18 +348,28 @@ class _HomeState extends State<Home> {
             margin: const EdgeInsets.all(10.0),
             child: Row(
               children: [
-                // 検索バー部分（幅いっぱいに広げたい場合Expandedでラップ）
-                Expanded(
-                  child: Container(
-                    // ここに検索バーのWidget（InputSearchなど）を配置
-                    child: InputSearch(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                          _currentPage = 1;
-                        });
-                      },
-                    ),
+                // 検索バー部分
+                InputSearch(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                      _currentPage = 1;
+                    });
+                  },
+                ),
+                // タグプルダウン
+                Container(
+                  margin: const EdgeInsets.only(left: 10.0, right: 4.0),
+                  alignment: Alignment.centerLeft,
+                  child: SelectTagPullButton(
+                    tags: allTags,
+                    selectedTag: selectedTag,
+                    onTagSelected: (tag) {
+                      setState(() {
+                        selectedTag = tag;
+                        _currentPage = 1;
+                      });
+                    },
                   ),
                 ),
 
@@ -321,22 +382,6 @@ class _HomeState extends State<Home> {
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
               ],
-            ),
-          ),
-
-          // タグプルダウン
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            alignment: Alignment.centerLeft,
-            child: SelectTagPullButton(
-              tags: tags,
-              selectedTag: selectedTag,
-              onTagSelected: (tag) {
-                setState(() {
-                  selectedTag = tag;
-                  _currentPage = 1;
-                });
-              },
             ),
           ),
           if (_isSelectionMode) _buildSelectionPanel(),

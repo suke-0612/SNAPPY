@@ -12,7 +12,7 @@ class InputSearch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: MediaQuery.of(context).size.width * 0.6,
         child: TextField(
           onChanged: onChanged,
           decoration: InputDecoration(

@@ -10,6 +10,12 @@ class Screenshot {
   String? title;
   String? location;
   String? description;
+}
 
-  get someTextField => null;
+@Collection()
+class Tag {
+  Id id = Isar.autoIncrement;
+
+  late String name; // 例: "tag1"
+  late String description; // 例: "hogho"
 }
