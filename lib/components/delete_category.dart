@@ -26,8 +26,10 @@ class _DeleteCategoryState extends State<DeleteCategory> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text('タグがありません'));
         }
-        final List<String> tags =
-            snapshot.data!.map((tag) => tag.name).toList();
+        final List<String> tags = snapshot.data!
+            .where((tag) => !['location', 'things', 'others'].contains(tag.name))
+            .map((tag) => tag.name)
+            .toList();
         return Column(
           children: [
             Expanded(
