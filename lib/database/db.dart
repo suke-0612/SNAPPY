@@ -2,15 +2,15 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:snappy/models/schema.dart';
 
-Isar? _isarInstance;
+Isar? isarInstance;
 
 Future<Isar> openIsarInstance() async {
-  if (_isarInstance != null && _isarInstance!.isOpen) {
-    return _isarInstance!;
+  if (isarInstance != null && isarInstance!.isOpen) {
+    return isarInstance!;
   }
-  _isarInstance = await Isar.open([ScreenshotSchema, TagSchema],
+  isarInstance = await Isar.open([ScreenshotSchema, TagSchema],
       directory: (await getApplicationDocumentsDirectory()).path);
-  return _isarInstance!;
+  return isarInstance!;
 }
 
 Future<void> saveTags(List<List<String>> tags) async {

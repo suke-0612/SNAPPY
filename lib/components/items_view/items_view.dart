@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/importer.dart';
 import 'dart:typed_data';
 
@@ -9,6 +8,7 @@ class ItemsView extends StatefulWidget {
   final bool isSelectionMode;
   final Function(ItemData) onItemTap;
   final Function(ItemData) onItemLongPress;
+  final Future<void> Function() onRefresh;
 
   const ItemsView({
     super.key,
@@ -17,6 +17,7 @@ class ItemsView extends StatefulWidget {
     required this.isSelectionMode,
     required this.onItemTap,
     required this.onItemLongPress,
+    required this.onRefresh,
   });
 
   @override
@@ -60,20 +61,17 @@ class _ItemsViewState extends State<ItemsView> {
 
           return ItemCard(
             key: ValueKey(item.id),
-            text: item.text,
-            category: item.category,
-            description: item.description,
+            item: item,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),
             onLongPress: () => widget.onItemLongPress(item),
             thumbnailBytes: _thumbnailCache[item.id],
+            onEdit: widget.onRefresh,
           );
         } else {
           return ItemCard(
             key: ValueKey(item.id),
-            text: item.text,
-            category: item.category,
-            description: item.description,
+            item: item,
             isSelected: isSelected,
             onTap: () => widget.onItemTap(item),
             onLongPress: () => widget.onItemLongPress(item),
