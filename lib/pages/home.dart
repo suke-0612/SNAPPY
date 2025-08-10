@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snappy/app.dart';
 import 'package:snappy/importer.dart';
 
 class Home extends StatefulWidget {
@@ -8,15 +9,12 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
-  static const List<String> tags = [
-    "all",
-    "location",
-    "things",
-    "train",
-    "others"
-  ];
-  String selectedTag = tags.first;
+class _HomeState extends State<Home> with RouteAware {
+  final List<String> defaultTags = ["all", "location", "things", "others"];
+  List<String> customTags = [];
+  List<String> get allTags => [...defaultTags, ...customTags];
+
+  late String selectedTag;
 
   Map<String, Screenshot> _isarScreenshotMap = {};
   List<AssetEntity> _screenshots = [];
@@ -71,8 +69,10 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    selectedTag = allTags.first;
     // 権限チェックと初期データロードを一括で実行
     _checkPermissionAndLoad();
+    _loadTags();
 
     // 写真の変更検知セットアップ
     PhotoManager.addChangeCallback((_) async {
@@ -83,11 +83,37 @@ class _HomeState extends State<Home> {
     PhotoManager.startChangeNotify();
   }
 
+  // RouteAware: 画面が表示された時
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    _loadTags();
+  }
+
+  // // RouteAware: 別ページから戻ってきた時
+  @override
+  void didPopNext() {
+    _loadTags();
+  }
+
   @override
   void dispose() {
     PhotoManager.stopChangeNotify();
     PhotoManager.removeChangeCallback(() {} as ValueChanged<MethodCall>);
     super.dispose();
+  }
+
+  Future<void> _loadTags() async {
+    final tags = await getAllTags();
+    print(tags);
+    setState(() {
+      for (var tag in tags) {
+        if (!customTags.contains(tag.name) && !defaultTags.contains(tag.name)) {
+          customTags.add(tag.name);
+        }
+      }
+    });
   }
 
   /// DBから全スクショ情報を取得してMapに変換し更新
@@ -169,12 +195,16 @@ class _HomeState extends State<Home> {
     if (newAssets.isNotEmpty) {
       print('新しいスクリーンショットが ${newAssets.length} 件あります。');
       try {
-        const apiTags = [
-          ["location", "行きたい場所、泊まりたい場所など。位置情報を持つ。位置情報を返してほしい"],
-          ["train", "時刻表など。どの駅に何時発の電車が、どの駅に何時につくか"],
-          ["things", "ほしいもの"],
-          ["others", "その他のタグ"]
+        List<List<String>> apiTags = [
+          ['location', ''],
+          ['things', ''],
+          ['others', ''],
         ];
+        await getAllTags().then((tags) {
+          for (var tag in tags) {
+            apiTags.add([tag.name, tag.description]);
+          }
+        });
         await uploadFilesWithTags(newAssets, apiTags);
       } catch (e) {
         print('API送信失敗: $e');
@@ -295,18 +325,28 @@ class _HomeState extends State<Home> {
             margin: const EdgeInsets.all(10.0),
             child: Row(
               children: [
-                // 検索バー部分（幅いっぱいに広げたい場合Expandedでラップ）
-                Expanded(
-                  child: Container(
-                    // ここに検索バーのWidget（InputSearchなど）を配置
-                    child: InputSearch(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                          _currentPage = 1;
-                        });
-                      },
-                    ),
+                // 検索バー部分
+                InputSearch(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                      _currentPage = 1;
+                    });
+                  },
+                ),
+                // タグプルダウン
+                Container(
+                  margin: const EdgeInsets.only(left: 10.0, right: 4.0),
+                  alignment: Alignment.centerLeft,
+                  child: SelectTagPullButton(
+                    tags: allTags,
+                    selectedTag: selectedTag,
+                    onTagSelected: (tag) {
+                      setState(() {
+                        selectedTag = tag;
+                        _currentPage = 1;
+                      });
+                    },
                   ),
                 ),
 
@@ -319,22 +359,6 @@ class _HomeState extends State<Home> {
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
               ],
-            ),
-          ),
-
-          // タグプルダウン
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            alignment: Alignment.centerLeft,
-            child: SelectTagPullButton(
-              tags: tags,
-              selectedTag: selectedTag,
-              onTagSelected: (tag) {
-                setState(() {
-                  selectedTag = tag;
-                  _currentPage = 1;
-                });
-              },
             ),
           ),
           if (_isSelectionMode) _buildSelectionPanel(),
