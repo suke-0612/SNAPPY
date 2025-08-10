@@ -132,7 +132,7 @@ class _PopupContainerState extends State<PopupContainer> {
                 children: [
                   CustomButton(
                     onPressed: widget.onPressedEdit,
-                    label: '修正',
+                    label: '編集',
                     icon: Icons.edit,
                     iconSize: 24.0,
                     backgroundColor: const Color(0xFFF98E6E),
