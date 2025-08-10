@@ -16,7 +16,8 @@ export 'package:snappy/components/items_view/items_view.dart';
 export "package:snappy/components/delete_category.dart";
 export 'package:snappy/models/item_data.dart';
 
-export 'package:snappy/components/edit_item_info_form.dart';
+export 'package:snappy/components/edit_item_info_popup/edit_item_info_form.dart';
+export 'package:snappy/components/edit_item_info_popup/edit_item_info_popup.dart';
 
 export 'package:photo_manager/photo_manager.dart';
 export 'package:snappy/api.dart';

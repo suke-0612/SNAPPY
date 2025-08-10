@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:snappy/app.dart';
 import 'package:snappy/components/popup_container.dart';
 import 'package:snappy/importer.dart';
-import 'dart:math';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -313,8 +312,7 @@ class _HomeState extends State<Home> with RouteAware {
               // 地図に追加処理
             },
             onPressedEdit: () {
-              Navigator.of(context).pop();
-              // 編集処理
+              showEditItemPopup(context, item: item, onEdit: refreshData);
             },
             onPressedDelete: () async {
               Navigator.of(context).pop();

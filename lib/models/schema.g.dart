@@ -15,7 +15,7 @@ extension GetScreenshotCollection on Isar {
 
 const ScreenshotSchema = CollectionSchema(
   name: r'Screenshot',
-  id: 349355034612490177,
+  id: 100000000000000000,
   properties: {
     r'assetId': PropertySchema(
       id: 0,
@@ -1247,7 +1247,7 @@ extension GetTagCollection on Isar {
 
 const TagSchema = CollectionSchema(
   name: r'Tag',
-  id: 4007045862261149568,
+  id: 100000000000000000,
   properties: {
     r'description': PropertySchema(
       id: 0,
