@@ -277,12 +277,12 @@ class _WantListState extends State<WantList> {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                const Icon(Icons.inventory_2, color: Colors.white),
+                const Icon(Icons.inventory_2, color: Colors.black),
                 const SizedBox(width: 8),
                 Text(
                   '欲しいものリスト (${_filteredItems.length}件)',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
