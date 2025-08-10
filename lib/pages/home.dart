@@ -31,6 +31,8 @@ class _HomeState extends State<Home> with RouteAware {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
 
+  final ScrollController _scrollController = ScrollController();
+
   // --- ページング用データ ---
   List<ItemData> get _pagedItems {
     final allItems = _itemsFromScreenshots;
@@ -103,6 +105,7 @@ class _HomeState extends State<Home> with RouteAware {
   void dispose() {
     PhotoManager.stopChangeNotify();
     PhotoManager.removeChangeCallback((MethodCall call) {});
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -406,6 +409,7 @@ class _HomeState extends State<Home> with RouteAware {
                     isSelectionMode: _isSelectionMode,
                     onItemTap: _handleTap,
                     onItemLongPress: _handleLongPress,
+                    scrollController: _scrollController,
                   )
                 : Center(
                     child: Text(
@@ -423,6 +427,11 @@ class _HomeState extends State<Home> with RouteAware {
                 setState(() {
                   _currentPage = page;
                 });
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(
+                    0.0,
+                  );
+                }
               },
             ),
         ],
