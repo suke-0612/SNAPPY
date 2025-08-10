@@ -370,18 +370,33 @@ class _HomeState extends State<Home> with RouteAware {
                     },
                   ),
                 ),
-
-                // ローディングアイコン部分
-                if (_loading)
+              ],
+            ),
+          ),
+          // ローディングアイコン部分
+          if (_loading)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '画像を読み込み中...',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Container(
                     margin: const EdgeInsets.only(left: 8.0),
                     width: 24,
                     height: 24,
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
