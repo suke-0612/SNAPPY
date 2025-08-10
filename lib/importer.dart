@@ -12,6 +12,7 @@ export "package:snappy/components/input_search.dart";
 export 'package:snappy/components/pagination.dart';
 export 'package:snappy/components/items_view/item_card.dart';
 export 'package:snappy/components/items_view/items_view.dart';
+export "package:snappy/components/delete_category.dart";
 export 'package:snappy/models/item_data.dart';
 
 export 'package:photo_manager/photo_manager.dart';
