@@ -16,9 +16,12 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image(
-              image: AssetImage('assets/images/snappy_logo.png'),
-              height: kToolbarHeight,
+            Text(
+              'Snappy',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
           ],
         ),
