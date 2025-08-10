@@ -24,13 +24,7 @@ class Settings extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                   ),
                   SizedBox(height: 16.0),
-                  //tags:tagsなどに変更してください
-                  Expanded(
-                      child: DeleteCategory(
-                    getTags: () =>
-                        ["programing", "books", "beauty", "want to go"],
-                    onPressedDelete: () {},
-                  ))
+                  Expanded(child: DeleteCategory())
                 ],
               ),
             ),
