@@ -59,6 +59,11 @@ class _HomeState extends State<Home> with RouteAware {
         id: asset.id,
         text: dbData?.title ?? '',
         assetEntity: asset,
+        onTapPopupContent: Text('Asset ID: ${asset.id}\n'
+            'タグ: ${dbData?.tag ?? "なし"}\n'
+            'タイトル: ${dbData?.title ?? "なし"}\n'
+            '場所: ${dbData?.location ?? "不明"}\n'
+            '説明: ${dbData?.description ?? "なし"}\n'),
       );
     }).toList();
   }

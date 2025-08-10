@@ -8,6 +8,7 @@ class ItemData {
   final String id;
   final String text;
   final AssetEntity? assetEntity;
+  final Widget? onTapPopupContent; // ポップアップのコンテンツを表示するためのコールバック
   final Uint8List? thumbnailBytes;
 
   ItemData({
@@ -15,5 +16,6 @@ class ItemData {
     required this.text,
     this.assetEntity,
     this.thumbnailBytes,
+    required this.onTapPopupContent,
   });
 }
