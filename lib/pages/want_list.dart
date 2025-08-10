@@ -223,7 +223,7 @@ class _WantListState extends State<WantList> {
           const Icon(
             Icons.inventory_2_outlined,
             size: 64,
-            color: Colors.grey,
+            color: Colors.black54,
           ),
           const SizedBox(height: 16),
           Text(
@@ -231,17 +231,17 @@ class _WantListState extends State<WantList> {
                 ? '"$_thingsTag" タグのアイテムがありません'
                 : '検索結果が見つかりませんでした',
             style: const TextStyle(
-              color: Colors.grey,
+              color: Colors.black54,
               fontSize: 16,
             ),
             textAlign: TextAlign.center,
           ),
           if (_searchQuery.isEmpty) ...[
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'ホーム画面でスクリーンショットに\n"$_thingsTag"タグを付けてください',
-              style: const TextStyle(
-                color: Colors.grey,
+              style: TextStyle(
+                color: Colors.black54,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -275,12 +275,12 @@ class _WantListState extends State<WantList> {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                const Icon(Icons.inventory_2, color: Colors.white),
+                const Icon(Icons.inventory_2, color: Colors.black),
                 const SizedBox(width: 8),
                 Text(
                   '欲しいものリスト (${_filteredItems.length}件)',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

@@ -6,19 +6,25 @@ class Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const BaseScreen(
+    return BaseScreen(
       child: Column(
         children: [
           Expanded(
             child: Center(
               child: Column(
                 children: [
-                  Text(
-                    'カテゴリの追加',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    alignment: Alignment.centerLeft,
+                    child: const Text(
+                      'カテゴリの追加',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
                   ),
-                  SizedBox(height: 16.0),
-                  AddCategoryForm(),
+                  const SizedBox(height: 16.0),
+                  const AddCategoryForm(),
                 ],
               ),
             ),

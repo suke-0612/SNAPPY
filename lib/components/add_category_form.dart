@@ -79,7 +79,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24.0),
+              const SizedBox(height: 16.0),
               Row(
                 children: [
                   const Text(
@@ -115,14 +115,20 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                   hintText: '例) 電車の発車時刻、到着時刻、駅名などが含まれます。',
                 ),
                 maxLines: 4,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'カテゴリの説明を入力してください。';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16.0),
               Align(
                 alignment: Alignment.centerRight,
                 child: CustomButton(
-                  label: '作成',
+                  label: '追加',
                   onPressed: _submitForm,
-                  backgroundColor: Colors.black,
+                  backgroundColor: const Color(0xFFA1CCA6),
                   fontColor: Colors.white,
                 ),
               ),
