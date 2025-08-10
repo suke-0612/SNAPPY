@@ -13,15 +13,48 @@ class Settings extends StatelessWidget {
             child: Center(
               child: Column(
                 children: [
-                  Text(
-                    'カテゴリの追加',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  Padding(padding: const EdgeInsets.only(top: 8.0)),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 8.0),
+                    alignment: Alignment.centerLeft,
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.add, color: Colors.black),
+                        const SizedBox(width: 8),
+                        Text(
+                          'カテゴリの追加',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 16.0),
                   AddCategoryForm(),
-                  Text(
-                    'カテゴリの削除',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 8.0),
+                    alignment: Alignment.centerLeft,
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.remove, color: Colors.black),
+                        const SizedBox(width: 8),
+                        Text(
+                          'カテゴリの削除',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 16.0),
                   Expanded(child: DeleteCategory())
