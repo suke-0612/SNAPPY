@@ -287,13 +287,37 @@ class _HomeState extends State<Home> with RouteAware {
     });
   }
 
-  void _deleteSelectedItems() {
-    setState(() {
-      // AssetEntityのリストからIDに一致するものを除去
-      _screenshots.removeWhere((asset) => _selectedIds.contains(asset.id));
-      _exitSelectionMode();
-    });
-    print('削除が実行されました: $_selectedIds');
+  void _deleteSelectedItems() async {
+    // 選択されたアイテムのAssetEntityとassetIdのマップを作成
+    Map<AssetEntity, String> selectedItemsMap = {};
+
+    for (String selectedId in _selectedIds) {
+      final asset = _screenshots.firstWhere(
+        (asset) => asset.id == selectedId,
+        orElse: () => throw Exception('選択されたアイテムが見つかりません'),
+      );
+      selectedItemsMap[asset] = selectedId;
+    }
+
+    // DeleteItemServiceを使用して一括削除
+    await DeleteItemService.deleteBulkScreenshotsWithAuth(
+      context: context,
+      items: selectedItemsMap,
+      onSuccess: () {
+        // 削除成功時の処理
+        setState(() {
+          // AssetEntityのリストからIDに一致するものを除去
+          _screenshots.removeWhere((asset) => _selectedIds.contains(asset.id));
+          _exitSelectionMode();
+        });
+        // DBデータも再取得して同期
+        _refreshIsarScreenshotMap();
+      },
+      onError: (error) {
+        // エラー処理
+        print('削除エラー: $error');
+      },
+    );
   }
 
   void _showPopup(ItemData item) {
@@ -317,8 +341,15 @@ class _HomeState extends State<Home> with RouteAware {
               // 編集処理
             },
             onPressedDelete: () async {
-              Navigator.of(context).pop();
-              // await _deleteScreenshot(item.id);
+              DeleteItemService.deleteScreenshotWithAuth(
+                context: context,
+                assetEntity: item.assetEntity!,
+                assetId: item.id,
+                onSuccess: () {
+                  Navigator.of(context).pop();
+                },
+                onError: null,
+              );
             },
             title: dbData?.title,
             location: dbData?.location ?? '',
