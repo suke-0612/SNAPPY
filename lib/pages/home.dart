@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:snappy/app.dart';
+import 'package:snappy/components/popup_container.dart';
 import 'package:snappy/importer.dart';
 
 class Home extends StatefulWidget {
@@ -56,11 +57,6 @@ class _HomeState extends State<Home> with RouteAware {
       return ItemData(
         id: asset.id,
         text: dbData?.title ?? '',
-        onTapPopupContent: Text('Asset ID: ${asset.id}\n'
-            'タグ: ${dbData?.tag ?? "なし"}\n'
-            'タイトル: ${dbData?.title ?? "なし"}\n'
-            '場所: ${dbData?.location ?? "不明"}\n'
-            '説明: ${dbData?.description ?? "なし"}\n'),
         assetEntity: asset,
       );
     }).toList();
@@ -239,7 +235,7 @@ class _HomeState extends State<Home> with RouteAware {
         }
       });
     } else {
-      _showPopup(item.onTapPopupContent);
+      _showPopup(item);
     }
   }
 
@@ -268,14 +264,33 @@ class _HomeState extends State<Home> with RouteAware {
     print('削除が実行されました: $_selectedIds');
   }
 
-  void _showPopup(Widget content) {
+  void _showPopup(ItemData item) {
+    final dbData = _isarScreenshotMap[item.id];
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.7), // 背景を半透明黒にして暗くする
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: content,
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40), // 横の余白で幅調整
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400), // 最大幅400pxに制限
+          child: PopupContainer(
+            assetEntity: item.assetEntity!,
+            onPressedAddMap: () {
+              Navigator.of(context).pop();
+              // 地図に追加処理
+            },
+            onPressedEdit: () {
+              Navigator.of(context).pop();
+              // 編集処理
+            },
+            onPressedDelete: () async {
+              Navigator.of(context).pop();
+              // await _deleteScreenshot(item.id);
+            },
+            title: dbData?.title,
+            location: dbData?.location ?? '',
+          ),
         ),
       ),
     );
