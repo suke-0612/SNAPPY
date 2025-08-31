@@ -1,13 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:snappy/importer.dart';
 
 class PopupContainer extends StatefulWidget {
   final AssetEntity assetEntity;
   final String? title;
   final String? location;
-  final VoidCallback onPressedAddMap;
+  final VoidCallback? onPressedAddMap; // オプショナルに変更
   final VoidCallback onPressedEdit;
   final VoidCallback onPressedDelete;
 
@@ -16,7 +17,7 @@ class PopupContainer extends StatefulWidget {
     required this.assetEntity,
     required this.title,
     this.location,
-    required this.onPressedAddMap,
+    this.onPressedAddMap, // オプショナルに変更
     required this.onPressedEdit,
     required this.onPressedDelete,
   }) : super(key: key);
@@ -44,6 +45,48 @@ class _PopupContainerState extends State<PopupContainer> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> _openMapView(BuildContext context) async {
+    // デバッグ用：locationデータを確認
+    print('Location data: ${widget.location}');
+
+    if (widget.location != null && widget.location!.isNotEmpty) {
+      Navigator.of(context).pop(); // 現在のポップアップを閉じる
+
+      // 直接Google MapsのURLを開く
+      final encodedLocation = Uri.encodeComponent(widget.location!);
+      final url =
+          'https://www.google.com/maps/search/?api=1&query=$encodedLocation';
+
+      try {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          _showMessage(context, 'Google Mapsを開けませんでした');
+        }
+      } catch (e) {
+        _showMessage(context, 'エラーが発生しました: $e');
+      }
+    } else {
+      // locationデータがない場合のメッセージ
+      _showMessage(context, '位置情報が設定されていません');
+    }
+  }
+
+  void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.black87,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
   }
 
   @override
@@ -107,20 +150,23 @@ class _PopupContainerState extends State<PopupContainer> {
                 ),
                 textAlign: TextAlign.center,
               ),
+              // 位置情報の表示と地図ボタン
               if (widget.location != null && widget.location!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  widget.location ?? '情報なし',
+                  widget.location!,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 CustomButton(
-                  onPressed: widget.onPressedAddMap,
-                  label: '地図に追加',
+                  onPressed: () => _openMapView(context),
+                  label: '地図を開く',
+                  icon: Icons.map,
+                  iconSize: 20.0,
                   backgroundColor: Colors.white,
                   fontColor: Colors.black,
                   size: Size(maxWidth * 0.8, 50),
