@@ -300,9 +300,43 @@ class _WantListState extends State<WantList> {
     if (_selectedItems.isEmpty) return;
 
     try {
-      // 選択されたアイテムを順次削除
+      // AssetEntityとassetIdのマップを作成
+      Map<AssetEntity, String> itemsToDelete = {};
+      List<String> databaseOnlyItems = [];
+
       for (final itemId in _selectedItems.toList()) {
-        await _deleteFromDatabase(itemId);
+        final assetEntity = _getAssetEntityFromId(itemId);
+        if (assetEntity != null) {
+          itemsToDelete[assetEntity] = itemId;
+        } else {
+          databaseOnlyItems.add(itemId);
+        }
+      }
+
+      // AssetEntityがあるアイテムは一括削除
+      if (itemsToDelete.isNotEmpty) {
+        await DeleteItemService.deleteBulkScreenshotsWithAuth(
+          context: context,
+          items: itemsToDelete,
+          onSuccess: () {
+            // UI状態の更新
+            setState(() {
+              for (final itemId in itemsToDelete.values) {
+                _isarScreenshotMap.remove(itemId);
+                _thingsItems.removeWhere((item) => item.id == itemId);
+                _assetEntityMap.remove(itemId);
+              }
+            });
+          },
+          onError: (errorMessage) {
+            _showError(errorMessage);
+          },
+        );
+      }
+
+      // データベースのみのアイテムは個別削除
+      for (final itemId in databaseOnlyItems) {
+        await _deleteFromDatabaseOnly(itemId);
       }
 
       // 選択状態をリセット
@@ -310,6 +344,8 @@ class _WantListState extends State<WantList> {
         _selectedItems.clear();
         _isSelecting = false;
       });
+
+      _showSuccessMessage('選択したアイテムを削除しました');
     } catch (e) {
       _showError('削除エラー: $e');
     }
@@ -363,6 +399,19 @@ class _WantListState extends State<WantList> {
       });
     } catch (e) {
       _showError('削除エラー: $e');
+    }
+  }
+
+  /// 成功メッセージを表示
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
