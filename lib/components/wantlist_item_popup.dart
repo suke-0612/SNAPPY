@@ -8,6 +8,7 @@ class WantListItemPopup extends StatefulWidget {
   final AssetEntity? assetEntity;
   final VoidCallback onAmazonSearch;
   final VoidCallback onClose;
+  final VoidCallback onDelete; // 削除用のコールバックを追加
 
   const WantListItemPopup({
     super.key,
@@ -15,6 +16,7 @@ class WantListItemPopup extends StatefulWidget {
     this.assetEntity,
     required this.onAmazonSearch,
     required this.onClose,
+    required this.onDelete, // 必須パラメータとして追加
   });
 
   @override
@@ -73,28 +75,24 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
             _buildContentSection(),
           ],
         ),
-        // 右上のバツボタン
+        // 右上のボタン群
         Positioned(
           top: -10,
           right: -10,
           child: GestureDetector(
-            onTap: widget.onClose,
+            onTap: () {
+              widget.onClose(); // まずポップアップを閉じる
+              widget.onDelete(); // その後削除処理を実行
+            },
             child: Container(
-              width: 32,
-              height: 32,
+              width: 35,
+              height: 35,
               decoration: BoxDecoration(
-                color: Colors.black87,
+                color: Colors.red[700],
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: const Icon(
-                Icons.close,
+                Icons.delete,
                 color: Colors.white,
                 size: 20,
               ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:snappy/importer.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:snappy/components/delete_item.dart';
 
 class WantList extends StatefulWidget {
   const WantList({super.key});
@@ -104,6 +103,7 @@ class _WantListState extends State<WantList> {
         assetEntity: _getAssetEntityFromId(screenshot.assetId),
         onAmazonSearch: () => _openAmazonSearch(screenshot.title!),
         onClose: () => Navigator.of(context).pop(),
+        onDelete: () => _deleteFromDatabase(screenshot.assetId),
       ),
       category: '',
       description: '',
