@@ -99,7 +99,7 @@ class GoogleGeocodingService {
 
   /// APIキーが設定されているかチェック
   static bool isApiKeyConfigured() {
-    final apiKey = dotenv.env['mapkey'] ?? '';
+    final apiKey = dotenv.env['googleServiceAPI'] ?? '';
     return apiKey.isNotEmpty && apiKey != 'YOUR_GOOGLE_GEOCODING_API_KEY';
   }
 }
