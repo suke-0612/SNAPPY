@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snappy/app.dart';
-import 'package:snappy/components/popup_container.dart';
 import 'package:snappy/importer.dart';
+import '../services/screenshot_actions_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -321,35 +321,22 @@ class _HomeState extends State<Home> with RouteAware {
 
   void _showPopup(ItemData item) {
     final dbData = _isarScreenshotMap[item.id];
-    showDialog(
+
+    // 共通サービスを使用してPopupContainerを表示
+    ScreenshotActionsService.showItemPopup(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7), // 背景を半透明黒にして暗くする
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 40), // 横の余白で幅調整
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400), // 最大幅400pxに制限
-          child: PopupContainer(
-            assetEntity: item.assetEntity!,
-            title: dbData?.title,
-            location: dbData?.location,
-            onPressedEdit: () {
-              showEditItemPopup(context, item: item, onEdit: refreshData);
-            },
-            onPressedDelete: () async {
-              DeleteItemService.deleteScreenshotWithAuth(
-                context: context,
-                assetEntity: item.assetEntity!,
-                assetId: item.id,
-                onSuccess: () {
-                  Navigator.of(context).pop();
-                },
-                onError: null,
-              );
-            },
+      item: item,
+      title: dbData?.title,
+      location: dbData?.location,
+      onRefresh: refreshData,
+      onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('削除に失敗しました: $error'),
+            backgroundColor: Colors.red,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -88,6 +88,28 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.map),
+            title: const Text('マップ'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  transitionDuration: const Duration(milliseconds: 200),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const MapPage(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('設定'),
             onTap: () {

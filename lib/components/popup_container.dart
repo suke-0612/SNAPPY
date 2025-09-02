@@ -147,6 +147,7 @@ class _PopupContainerState extends State<PopupContainer> {
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.none,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -158,6 +159,7 @@ class _PopupContainerState extends State<PopupContainer> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
+                    decoration: TextDecoration.none,
                   ),
                   textAlign: TextAlign.center,
                 ),
