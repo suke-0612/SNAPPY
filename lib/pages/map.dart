@@ -93,18 +93,6 @@ class _MapPageState extends State<MapPage> {
         _errorMessage = '';
       });
 
-      // Google Geocoding API キーのチェック
-      if (!GoogleGeocodingService.isApiKeyConfigured()) {
-        debugPrint('警告: Google Geocoding API キーが設定されていません');
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Google Geocoding API キーが設定されていません。'
-                'lib/services/google_geocoding_service.dart でAPIキーを設定してください。';
-          });
-        }
-        return;
-      }
-
       final isar = await openIsarInstance();
 
       // locationタグのスクリーンショットを取得
@@ -121,9 +109,6 @@ class _MapPageState extends State<MapPage> {
           .toList();
 
       debugPrint('有効な位置情報を持つスクリーンショット数: ${validScreenshots.length}');
-      for (var screenshot in validScreenshots) {
-        debugPrint('タイトル: ${screenshot.title}, 位置: ${screenshot.location}');
-      }
 
       _locationScreenshots = validScreenshots;
       await _createMarkers();
@@ -148,6 +133,7 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     Set<Marker> markers = {};
+    final isar = await openIsarInstance();
 
     for (int i = 0; i < _locationScreenshots.length; i++) {
       final screenshot = _locationScreenshots[i];
@@ -156,7 +142,18 @@ class _MapPageState extends State<MapPage> {
         continue;
       }
 
-      final coordinates = await _parseLocation(screenshot.location!);
+      LatLng? coordinates;
+
+      // 1. まずIsarから緯度・経度を取得
+      if (screenshot.latitude != null && screenshot.longitude != null) {
+        coordinates = LatLng(screenshot.latitude!, screenshot.longitude!);
+        debugPrint(
+            'Isarから座標取得: ${screenshot.title} - ${coordinates.latitude}, ${coordinates.longitude}');
+      } else {
+        // 2. 緯度・経度がない場合はジオコーディングを実行
+        debugPrint('緯度・経度がないため、ジオコーディング実行: ${screenshot.location}');
+        coordinates = await _geocodeAndSave(screenshot, isar);
+      }
 
       if (coordinates != null) {
         try {
@@ -182,7 +179,7 @@ class _MapPageState extends State<MapPage> {
           debugPrint('マーカー作成エラー: $e');
         }
       } else {
-        debugPrint('座標解析失敗: ${screenshot.location}');
+        debugPrint('座標取得失敗: ${screenshot.location}');
       }
     }
 
@@ -195,22 +192,32 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  /// 位置情報文字列を解析してLatLngに変換
-  Future<LatLng?> _parseLocation(String location) async {
+  /// ジオコーディングを実行してIsarに保存
+  Future<LatLng?> _geocodeAndSave(Screenshot screenshot, Isar isar) async {
     try {
-      debugPrint('住所解析開始: $location');
-
-      String cleanLocation = location.trim();
-
-      if (cleanLocation.isEmpty) {
-        debugPrint('住所が空です');
+      // Google Geocoding API キーのチェック
+      if (!GoogleGeocodingService.isApiKeyConfigured()) {
+        debugPrint('Google Geocoding API キーが設定されていません');
         return null;
       }
 
-      // 住所としてジオコーディング
-      return await _geocodeAddress(cleanLocation);
+      // 住所から座標を取得
+      final coordinates = await _geocodeAddress(screenshot.location!);
+
+      if (coordinates != null) {
+        // Isarに緯度・経度を保存
+        await isar.writeTxn(() async {
+          screenshot.latitude = coordinates.latitude;
+          screenshot.longitude = coordinates.longitude;
+          await isar.screenshots.put(screenshot);
+        });
+
+        debugPrint(
+            '緯度・経度をIsarに保存: ${screenshot.title} - ${coordinates.latitude}, ${coordinates.longitude}');
+        return coordinates;
+      }
     } catch (e) {
-      debugPrint('住所解析エラー: $e, location: $location');
+      debugPrint('ジオコーディング・保存エラー: $e');
     }
     return null;
   }
@@ -218,12 +225,6 @@ class _MapPageState extends State<MapPage> {
   /// 住所から座標を取得
   Future<LatLng?> _geocodeAddress(String address) async {
     try {
-      // APIキーが設定されているかチェック
-      if (!GoogleGeocodingService.isApiKeyConfigured()) {
-        debugPrint('Google Geocoding API キーが設定されていません');
-        return null;
-      }
-
       // 日本の住所の場合、「日本」を追加してより正確にする
       String searchAddress = address;
       if (!address.toLowerCase().contains('japan') && !address.contains('日本')) {
@@ -302,7 +303,6 @@ class _MapPageState extends State<MapPage> {
       final newZoom = _currentZoom + 1;
       debugPrint('新しいズーム値: $newZoom');
       if (newZoom <= 20) {
-        // 最大ズーム20
         await _mapController!.animateCamera(CameraUpdate.zoomTo(newZoom));
         setState(() {
           _currentZoom = newZoom;
@@ -323,7 +323,6 @@ class _MapPageState extends State<MapPage> {
       final newZoom = _currentZoom - 1;
       debugPrint('新しいズーム値: $newZoom');
       if (newZoom >= 1) {
-        // 最小ズーム1
         await _mapController!.animateCamera(CameraUpdate.zoomTo(newZoom));
         setState(() {
           _currentZoom = newZoom;
@@ -408,7 +407,6 @@ class _MapPageState extends State<MapPage> {
           onMapCreated: (GoogleMapController controller) {
             if (mounted) {
               _mapController = controller;
-              // 初期ズームレベルを設定
               if (_initialPosition != null) {
                 setState(() {
                   _currentZoom = _initialPosition!.zoom;
@@ -417,7 +415,6 @@ class _MapPageState extends State<MapPage> {
             }
           },
           onCameraMove: (CameraPosition position) {
-            // ズームレベルをリアルタイムで更新（setStateで画面も更新）
             if (mounted) {
               setState(() {
                 _currentZoom = position.zoom;
@@ -430,10 +427,10 @@ class _MapPageState extends State<MapPage> {
                 zoom: 10,
               ),
           markers: _markers,
-          myLocationEnabled: false,
+          myLocationEnabled: true,
           myLocationButtonEnabled: false,
           mapType: MapType.normal,
-          zoomControlsEnabled: false, // デフォルトのズームボタンを無効化
+          zoomControlsEnabled: false,
           compassEnabled: true,
           mapToolbarEnabled: false,
           minMaxZoomPreference: const MinMaxZoomPreference(1.0, 20.0),
@@ -445,7 +442,6 @@ class _MapPageState extends State<MapPage> {
           bottom: 16,
           child: Column(
             children: [
-              // ズームインボタン
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: FloatingActionButton(
@@ -463,8 +459,6 @@ class _MapPageState extends State<MapPage> {
                   child: const Icon(Icons.add),
                 ),
               ),
-
-              // ズームアウトボタン
               FloatingActionButton(
                 mini: true,
                 heroTag: "zoom_out",

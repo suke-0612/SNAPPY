@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GoogleGeocodingService {
-  static String get _apiKey => dotenv.env['googleServiceAPI'] ?? '';
+  static String get _apiKey => dotenv.env['googleService_API_KEY'] ?? '';
   static const String _baseUrl =
       'https://maps.googleapis.com/maps/api/geocode/json';
 
@@ -61,46 +61,10 @@ class GoogleGeocodingService {
     return null;
   }
 
-  /// 座標から住所を取得（逆ジオコーディング）
-  static Future<GeocodingResult?> getAddressFromCoordinates(
-      double latitude, double longitude) async {
-    try {
-      final url = '$_baseUrl?latlng=$latitude,$longitude&key=$_apiKey';
-
-      debugPrint('逆Geocoding API呼び出し: $latitude, $longitude');
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['status'] == 'OK' && data['results'].isNotEmpty) {
-          final result = data['results'][0];
-
-          debugPrint('逆Geocoding成功: ${result['formatted_address']}');
-
-          return GeocodingResult(
-            latitude: latitude,
-            longitude: longitude,
-            formattedAddress: result['formatted_address'],
-          );
-        } else {
-          debugPrint('逆Geocoding結果なし: ${data['status']}');
-        }
-      } else {
-        debugPrint('HTTP エラー: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('逆Geocoding API エラー: $e');
-    }
-
-    return null;
-  }
-
   /// APIキーが設定されているかチェック
   static bool isApiKeyConfigured() {
-    final apiKey = dotenv.env['googleServiceAPI'] ?? '';
-    return apiKey.isNotEmpty && apiKey != 'YOUR_GOOGLE_GEOCODING_API_KEY';
+    final apiKey = dotenv.env['googleService_API_KEY'] ?? '';
+    return apiKey.isNotEmpty && apiKey != 'googleService_API_KEY';
   }
 }
 

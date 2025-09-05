@@ -10,7 +10,7 @@ class ItemData {
   final String category;
   final String description;
   final AssetEntity? assetEntity;
-  final Widget? onTapPopupContent; // ポップアップのコンテンツを表示するためのコールバック
+  final Widget? onTapPopupContent;
   final Uint8List? thumbnailBytes;
 
   ItemData({
