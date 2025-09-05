@@ -331,10 +331,8 @@ class _HomeState extends State<Home> with RouteAware {
           constraints: const BoxConstraints(maxWidth: 400), // 最大幅400pxに制限
           child: PopupContainer(
             assetEntity: item.assetEntity!,
-            onPressedAddMap: () {
-              Navigator.of(context).pop();
-              // 地図に追加処理
-            },
+            title: dbData?.title,
+            location: dbData?.location,
             onPressedEdit: () {
               showEditItemPopup(context, item: item, onEdit: refreshData);
             },
@@ -349,8 +347,6 @@ class _HomeState extends State<Home> with RouteAware {
                 onError: null,
               );
             },
-            title: dbData?.title,
-            location: dbData?.location ?? '',
           ),
         ),
       ),
