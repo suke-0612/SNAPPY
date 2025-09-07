@@ -333,8 +333,23 @@ class _HomeState extends State<Home> with RouteAware {
             assetEntity: item.assetEntity!,
             title: dbData?.title,
             location: dbData?.location,
-            onPressedEdit: () {
-              showEditItemPopup(context, item: item, onEdit: refreshData);
+            // onPressedEdit: () {
+            //   showEditItemPopup(context, item: item, onEdit: refreshData);
+            // },
+            onPressedEdit: () async {
+              Navigator.of(context).pop();
+
+              final bool? success = await showEditItemPopup(
+                context,
+                item: item,
+                onRefresh: refreshData, // onRefreshとしてrefreshDataを渡す
+              );
+
+              if (success == true && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('編集内容を保存しました')),
+                );
+              }
             },
             onPressedDelete: () async {
               DeleteItemService.deleteScreenshotWithAuth(
