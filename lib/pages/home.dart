@@ -319,30 +319,38 @@ class _HomeState extends State<Home> with RouteAware {
     );
   }
 
-  void _showPopup(ItemData item) {
+  void _showPopup(ItemData item) async {
     final dbData = _isarScreenshotMap[item.id];
-    showDialog(
+    final bool? success = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7), // 背景を半透明黒にして暗くする
-      builder: (context) => Dialog(
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 40), // 横の余白で幅調整
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400), // 最大幅400pxに制限
+          constraints: const BoxConstraints(maxWidth: 400),
           child: PopupContainer(
             assetEntity: item.assetEntity!,
             title: dbData?.title,
             location: dbData?.location,
-            onPressedEdit: () {
-              showEditItemPopup(context, item: item, onEdit: refreshData);
+            onPressedEdit: () async {
+              final bool? editSuccess = await showEditItemPopup(
+                context,
+                item: item,
+                onRefresh: refreshData,
+              );
+
+              if (editSuccess == true) {
+                Navigator.of(dialogContext).pop(true);
+              }
             },
             onPressedDelete: () async {
               DeleteItemService.deleteScreenshotWithAuth(
-                context: context,
+                context: dialogContext, // dialogContextを使う
                 assetEntity: item.assetEntity!,
                 assetId: item.id,
                 onSuccess: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogContext).pop();
                 },
                 onError: null,
               );
@@ -351,6 +359,12 @@ class _HomeState extends State<Home> with RouteAware {
         ),
       ),
     );
+    // 編集が成功した場合にSnackBarを表示
+    if (success == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('編集内容を保存しました')),
+      );
+    }
   }
 
   Widget _buildSelectionPanel() {
@@ -431,9 +445,9 @@ class _HomeState extends State<Home> with RouteAware {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     '画像を読み込み中...',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

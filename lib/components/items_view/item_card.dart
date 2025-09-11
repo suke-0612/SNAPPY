@@ -9,7 +9,7 @@ class ItemCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Uint8List? thumbnailBytes;
-  final VoidCallback? onEdit;
+  final Future<void> Function()? onEdit;
 
   const ItemCard({
     super.key,
@@ -74,12 +74,19 @@ class ItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.white),
-                      onPressed: () {
-                        showEditItemPopup(
+                      onPressed: () async {
+                        if (onEdit == null) return;
+                        final bool? success = await showEditItemPopup(
                           context,
                           item: item,
-                          onEdit: onEdit,
+                          onRefresh: onEdit!,
                         );
+                        if (!context.mounted) return;
+                        if (success == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('編集内容を保存しました')),
+                          );
+                        }
                       },
                       tooltip: 'Edit',
                       splashRadius: 20,

@@ -3,13 +3,11 @@ import 'package:snappy/importer.dart';
 
 class EditItemInfoForm extends StatefulWidget {
   final ItemData item;
-  final VoidCallback onSubmit;
   final Future<void> Function() onRefresh;
 
   const EditItemInfoForm({
     super.key,
     required this.item,
-    required this.onSubmit,
     required this.onRefresh,
   });
 
@@ -95,16 +93,13 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
       print('After update title: ${updatedScreenshot?.title}');
 
       // 編集完了後にDBの最新データを再取得
-      if (widget.onRefresh != null) {
-        print('Refreshing data...');
-        await widget.onRefresh!();
-      }
+      print('Refreshing data...');
+      await widget.onRefresh();
 
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('編集内容を保存しました')));
+        Navigator.of(context).pop(true);
       }
-      widget.onSubmit();
+      // widget.onSubmit();
     }
   }
 
