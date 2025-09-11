@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:snappy/importer.dart';
 
 class Home extends StatefulWidget {
+  static const routeName = '/home';
   const Home({super.key});
 
   @override
@@ -47,7 +48,7 @@ class _HomeState extends State<Home> with RouteAware {
       return ItemData(
         id: asset.id,
         text: dbData?.title ?? '',
-        location: dbData?.location ?? '不明',
+        location: dbData?.location ?? '',
         category: dbData?.tag ?? 'その他',
         description: dbData?.description ?? 'なし',
         assetEntity: asset,
@@ -85,7 +86,11 @@ class _HomeState extends State<Home> with RouteAware {
   }
 
   @override
-  void didPopNext() => _loadTags();
+  void didPopNext() => {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _loadTags();
+        })
+      };
 
   @override
   void dispose() {
@@ -254,6 +259,151 @@ class _HomeState extends State<Home> with RouteAware {
     );
   }
 
+  Future<void> _changeSelectedItemsCategory() async {
+    if (_selectedIds.isEmpty) return;
+
+    // all を除いたタグ一覧
+    final selectableTags =
+        _allTags.where((tag) => tag.toLowerCase() != 'all').toList();
+
+    final selectedTag = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (ctx) {
+        String? tempSelected;
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'カテゴリを選択',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // タグ一覧
+                  SizedBox(
+                    height: 300,
+                    child: ListView.separated(
+                      itemCount: selectableTags.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final tag = selectableTags[index];
+                        final isSelected = tag == tempSelected;
+
+                        return InkWell(
+                          onTap: () => setState(() => tempSelected = tag),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.grey.shade100
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.grey.shade500
+                                    : Colors.grey.shade300,
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 2,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_off,
+                                  color: isSelected
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade400,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    tag,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  CustomButton(
+                    label: '変更する',
+                    icon: Icons.check,
+                    onPressed: () {
+                      if (tempSelected == null) return;
+                      Navigator.pop(ctx, tempSelected);
+                    },
+                    backgroundColor: Colors.black,
+                    borderRadius: 12,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (selectedTag == null) return;
+
+    final isar = await openIsarInstance();
+
+    await isar.writeTxn(() async {
+      for (var id in _selectedIds) {
+        final screenshot = _isarScreenshotMap[id];
+        if (screenshot != null) {
+          screenshot.tag = selectedTag;
+          await isar.screenshots.put(screenshot);
+        }
+      }
+    });
+
+    await _refreshIsarScreenshotMap();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_selectedIds.length}件のカテゴリを "$selectedTag" に変更しました'),
+        ),
+      );
+      _exitSelectionMode();
+    }
+  }
+
   Future<void> _showPopup(ItemData item) async {
     final success = await showDialog<bool>(
       context: context,
@@ -301,6 +451,7 @@ class _HomeState extends State<Home> with RouteAware {
       child: Column(
         children: [
           _buildSearchBar(),
+          _buildPageInfo(),
           if (_loading) _buildLoadingIndicator(),
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
@@ -390,6 +541,69 @@ class _HomeState extends State<Home> with RouteAware {
     );
   }
 
+  Widget _buildPageInfo() {
+    final totalItems = _itemsFromScreenshots.length;
+    if (totalItems == 0) return const SizedBox.shrink();
+
+    final start = (_currentPage - 1) * _itemsPerPage + 1;
+    final end = min(_currentPage * _itemsPerPage, totalItems);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ShaderMask(
+          shaderCallback: (bounds) {
+            return const LinearGradient(
+              colors: [
+                Color(0xFFF98E6E),
+                Color.fromARGB(255, 49, 47, 43)
+              ], // 赤→オレンジ
+            ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
+          },
+          child: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(
+                  text: 'Show: ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                TextSpan(
+                  text: '$start–$end',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const TextSpan(
+                  text: ' of ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                TextSpan(
+                  text: '$totalItems',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSelectionPanel() {
     return Container(
       height: 56,
@@ -413,9 +627,19 @@ class _HomeState extends State<Home> with RouteAware {
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.white),
-            onPressed: _deleteSelectedItems,
+          Row(
+            children: [
+              // カテゴリ変更ボタン
+              IconButton(
+                icon: const Icon(Icons.category, color: Colors.white),
+                tooltip: 'カテゴリを変更',
+                onPressed: _changeSelectedItemsCategory,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.white),
+                onPressed: _deleteSelectedItems,
+              ),
+            ],
           ),
         ],
       ),

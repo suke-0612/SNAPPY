@@ -61,26 +61,53 @@ class ItemCard extends StatelessWidget {
                 ),
               ),
 
-              // テキスト
+              // タイトル + カテゴリ
               Align(
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
-                  child: Text(
-                    item.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start, // 左寄せ
+                    children: [
+                      if (item.category.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            item.category,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                        child: Text(
+                          item.text,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.left,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
 
-              // 編集ボタン（丸く浮かせる）
+              // 編集ボタン
               Positioned(
                 top: 8,
                 right: 8,
