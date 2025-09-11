@@ -1,9 +1,10 @@
 export 'package:snappy/app.dart';
 
 export 'package:snappy/pages/home.dart';
-export 'package:snappy/pages/settings.dart';
+export 'package:snappy/pages/category_settings.dart';
 export 'package:snappy/pages/want_list.dart';
 export 'package:snappy/pages/map.dart';
+export 'package:snappy/pages/settings.dart';
 
 export 'package:snappy/components/header.dart';
 export 'package:snappy/components/drawer.dart';
