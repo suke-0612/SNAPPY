@@ -20,6 +20,8 @@ class _WantListState extends State<WantList> {
   Map<String, AssetEntity> _assetEntityMap = {}; // AssetEntityのキャッシュを追加
   bool _loading = true;
   String _searchQuery = '';
+  bool _isSelecting = false; // 選択モードかどうか
+  Set<String> _selectedItems = {}; // 選択されたアイテムのID
 
   @override
   void initState() {
@@ -101,6 +103,7 @@ class _WantListState extends State<WantList> {
         assetEntity: _getAssetEntityFromId(screenshot.assetId),
         onAmazonSearch: () => _openAmazonSearch(screenshot.title!),
         onClose: () => Navigator.of(context).pop(),
+        onDelete: () => _deleteFromDatabase(screenshot.assetId),
       ),
       category: '',
       description: '',
@@ -181,11 +184,19 @@ class _WantListState extends State<WantList> {
 
   /// リストアイテムを構築
   Widget _buildListItem(ItemData item, Screenshot? screenshot) {
+    final isSelected = _selectedItems.contains(item.id);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       elevation: 2,
-      color: Colors.white,
+      color: isSelected ? Colors.grey.shade300 : Colors.white,
       child: ListTile(
+        leading: _isSelecting
+            ? Icon(
+                isSelected ? Icons.check_circle : Icons.circle_outlined,
+                color: isSelected ? Colors.black : Colors.grey,
+              )
+            : null,
         title: Text(
           screenshot?.title ?? 'タイトルなし',
           style: const TextStyle(
@@ -193,25 +204,33 @@ class _WantListState extends State<WantList> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_cart,
-              color: Colors.orange[700],
-              size: 20,
-            ),
-            Text(
-              'Amazon',
-              style: TextStyle(
-                color: Colors.orange[700],
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+        trailing: _isSelecting
+            ? null
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart,
+                    color: Colors.orange[700],
+                    size: 20,
+                  ),
+                  Text(
+                    'Amazon',
+                    style: TextStyle(
+                      color: Colors.orange[700],
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-        onTap: () => _showItemDetails(item),
+        onTap: () {
+          if (_isSelecting) {
+            _toggleItemSelection(item.id);
+          } else {
+            _showItemDetails(item);
+          }
+        },
       ),
     );
   }
@@ -254,6 +273,148 @@ class _WantListState extends State<WantList> {
     );
   }
 
+  void _selectDeleteItems() {
+    setState(() {
+      _isSelecting = !_isSelecting;
+      if (!_isSelecting) {
+        _selectedItems.clear(); // 選択モードを終了する時は選択をクリア
+      }
+    });
+  }
+
+  /// アイテムの選択状態を切り替え
+  void _toggleItemSelection(String itemId) {
+    if (!_isSelecting) return;
+
+    setState(() {
+      if (_selectedItems.contains(itemId)) {
+        _selectedItems.remove(itemId);
+      } else {
+        _selectedItems.add(itemId);
+      }
+    });
+  }
+
+  /// 選択されたアイテムを削除
+  Future<void> _deleteSelectedItems() async {
+    if (_selectedItems.isEmpty) return;
+
+    try {
+      // AssetEntityとassetIdのマップを作成
+      Map<AssetEntity, String> itemsToDelete = {};
+      List<String> databaseOnlyItems = [];
+
+      for (final itemId in _selectedItems.toList()) {
+        final assetEntity = _getAssetEntityFromId(itemId);
+        if (assetEntity != null) {
+          itemsToDelete[assetEntity] = itemId;
+        } else {
+          databaseOnlyItems.add(itemId);
+        }
+      }
+
+      // AssetEntityがあるアイテムは一括削除
+      if (itemsToDelete.isNotEmpty) {
+        await DeleteItemService.deleteBulkScreenshotsWithAuth(
+          context: context,
+          items: itemsToDelete,
+          onSuccess: () {
+            // UI状態の更新
+            setState(() {
+              for (final itemId in itemsToDelete.values) {
+                _isarScreenshotMap.remove(itemId);
+                _thingsItems.removeWhere((item) => item.id == itemId);
+                _assetEntityMap.remove(itemId);
+              }
+            });
+          },
+          onError: (errorMessage) {
+            _showError(errorMessage);
+          },
+        );
+      }
+
+      // データベースのみのアイテムは個別削除
+      for (final itemId in databaseOnlyItems) {
+        await _deleteFromDatabaseOnly(itemId);
+      }
+
+      // 選択状態をリセット
+      setState(() {
+        _selectedItems.clear();
+        _isSelecting = false;
+      });
+
+      _showSuccessMessage('選択したアイテムを削除しました');
+    } catch (e) {
+      _showError('削除エラー: $e');
+    }
+  }
+
+  /// DeleteItemServiceを使用してアイテムを削除
+  Future<void> _deleteFromDatabase(String assetId) async {
+    try {
+      final assetEntity = _getAssetEntityFromId(assetId);
+
+      if (assetEntity != null) {
+        // AssetEntityがある場合は DeleteItemService を使用
+        await DeleteItemService.deleteScreenshotWithAuth(
+          context: context,
+          assetEntity: assetEntity,
+          assetId: assetId,
+          onSuccess: () {
+            setState(() {
+              _isarScreenshotMap.remove(assetId);
+              _thingsItems.removeWhere((item) => item.id == assetId);
+              _assetEntityMap.remove(assetId);
+            });
+          },
+          onError: (errorMessage) {
+            _showError(errorMessage);
+          },
+        );
+      } else {
+        // AssetEntityがない場合はデータベースのみから削除
+        await _deleteFromDatabaseOnly(assetId);
+      }
+    } catch (e) {
+      _showError('削除エラー: $e');
+    }
+  }
+
+  /// データベースのみから削除（AssetEntityがない場合）
+  Future<void> _deleteFromDatabaseOnly(String assetId) async {
+    try {
+      final isar = await openIsarInstance();
+
+      await isar.writeTxn(() async {
+        await isar.screenshots.filter().assetIdEqualTo(assetId).deleteAll();
+      });
+
+      // ローカル状態も更新
+      setState(() {
+        _isarScreenshotMap.remove(assetId);
+        _thingsItems.removeWhere((item) => item.id == assetId);
+        _assetEntityMap.remove(assetId);
+      });
+    } catch (e) {
+      _showError('削除エラー: $e');
+    }
+  }
+
+  /// 成功メッセージを表示
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BaseScreen(
@@ -277,15 +438,54 @@ class _WantListState extends State<WantList> {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                const Icon(Icons.inventory_2, color: Colors.black),
+                _isSelecting
+                    ? SizedBox.shrink()
+                    : Icon(Icons.inventory_2, color: Colors.black),
                 const SizedBox(width: 8),
                 Text(
-                  '欲しいものリスト (${_filteredItems.length}件)',
+                  _isSelecting
+                      ? '選択中 (${_selectedItems.length}/${_filteredItems.length}件)'
+                      : '欲しいものリスト (${_filteredItems.length}件)',
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+                const Spacer(),
+                if (_isSelecting && _selectedItems.isNotEmpty) ...[
+                  GestureDetector(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete, color: Colors.white, size: 18),
+                          SizedBox(width: 4),
+                          Text(
+                            '削除',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: _deleteSelectedItems,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                GestureDetector(
+                  child: Icon(_isSelecting ? Icons.close : Icons.delete,
+                      color: Colors.black),
+                  onTap: _selectDeleteItems,
                 ),
               ],
             ),
