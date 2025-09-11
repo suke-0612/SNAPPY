@@ -10,6 +10,8 @@ class Screenshot {
   String? title;
   String? location;
   String? description;
+  double? latitude;
+  double? longitude;
 }
 
 @Collection()

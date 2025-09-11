@@ -38,9 +38,10 @@ dependencies:
   isar_flutter_libs: ^3.1.0+1
   http: ^1.5.0
   url_launcher: ^6.2.2
-  google_maps_flutter: ^2.5.0
+  google_maps_flutter: ^2.10.0
   geocoding: ^3.0.0
   geolocator: ^10.1.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   build_runner: 2.4.13
@@ -72,6 +73,8 @@ flutter:
     - assets/images/snappy_logo.png
     - assets/launcher_icon/snappy_iphone_icon.png
     - assets/launcher_icon/snappy_android_icon.png
+    - .env
+    # - assets/images/ポラリス_QUICK_LUNCH.png
   fonts:
     - family: NotoSansJP # アプリ内で使用するフォントファミリー名
       fonts:

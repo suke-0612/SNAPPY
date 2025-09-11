@@ -4,6 +4,12 @@
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>スクリーンショット画像にアクセスします</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>地図で現在地を表示するために使用します</string>
+	<key>GMSApiKey</key>
+	<string>$(googleService_API_KEY)</string>
+	<key>FLTEnableImpeller</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
