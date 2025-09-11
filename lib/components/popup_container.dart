@@ -150,6 +150,7 @@ class _PopupContainerState extends State<PopupContainer> {
                     child: Text(
                       widget.item.category,
                       style: const TextStyle(
+                        decoration: TextDecoration.none,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -160,6 +161,7 @@ class _PopupContainerState extends State<PopupContainer> {
               Text(
                 widget.item.text,
                 style: const TextStyle(
+                  decoration: TextDecoration.none,
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -182,6 +184,7 @@ class _PopupContainerState extends State<PopupContainer> {
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 18,
+                    decoration: TextDecoration.none,
                   ),
                   textAlign: TextAlign.center,
                 ),
