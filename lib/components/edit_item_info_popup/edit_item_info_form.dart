@@ -36,6 +36,8 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
     _descriptionController =
         TextEditingController(text: widget.item.description);
     _locationController = TextEditingController(text: widget.item.location);
+
+    _loadCategories();
   }
 
   Future<void> _loadCategories() async {
@@ -148,6 +150,7 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                     child: SelectTagPullButton(
                       tags: _categoryOptions,
                       selectedTag: _selectedCategory,
+                      borderRadius: 10,
                       borderColor: Colors.grey[600],
                       onTagSelected: (String value) {
                         setState(() {

@@ -89,7 +89,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.settings),
-            title: const Text('設定'),
+            title: const Text('カテゴリー設定'),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(

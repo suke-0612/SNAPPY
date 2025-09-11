@@ -41,7 +41,6 @@ class _SettingsState extends State<Settings> {
 
   Future<void> _loadTags() async {
     final tags = await getAllTags();
-    print(tags.length);
     setState(() {
       _allTags = tags
           .where(
@@ -49,7 +48,6 @@ class _SettingsState extends State<Settings> {
           )
           .map((tag) => tag.name)
           .toList();
-      print(_allTags);
     });
   }
 

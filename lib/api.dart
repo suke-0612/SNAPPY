@@ -1,9 +1,7 @@
-import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:snappy/importer.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:snappy/database/db.dart';
-import 'package:snappy/models/schema.dart';
 
 Future<void> uploadFilesWithTags(
     List<AssetEntity> assets, List<List<String>> tags) async {
@@ -26,7 +24,7 @@ Future<void> uploadFilesWithTags(
   }
 
   // tags を JSON 文字列にして fields にセット
-  // request.fields['tags'] = jsonEncode(tags);
+  request.fields['tags'] = jsonEncode(tags);
 
   // リクエスト送信
   final response = await request.send();
@@ -35,7 +33,6 @@ Future<void> uploadFilesWithTags(
     final responseBody = await response.stream.bytesToString();
     final decoded = jsonDecode(responseBody);
     await saveApiResponseToIsar(decoded, assets);
-    // print(decoded);
   } else {
     throw Exception('Failed to upload files');
   }
@@ -72,5 +69,5 @@ Future<void> saveApiResponseToIsar(
     await isar.screenshots.putAll(screenshots);
   });
 
-  print('Saved ${screenshots.length} records to Isar');
+  debugPrint('Saved ${screenshots.length} records to Isar');
 }

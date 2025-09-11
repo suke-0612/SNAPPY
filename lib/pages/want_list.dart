@@ -54,7 +54,7 @@ class _WantListState extends State<WantList> {
         type: RequestType.image,
         filterOption: FilterOptionGroup()
           ..addOrderOption(
-              OrderOption(type: OrderOptionType.createDate, asc: false)),
+              const OrderOption(type: OrderOptionType.createDate, asc: false)),
       );
       if (albums.isEmpty) return;
 
@@ -81,7 +81,6 @@ class _WantListState extends State<WantList> {
   AssetEntity? _getAssetEntity(String assetId) => _assetEntityMap[assetId];
 
   void _showError(String msg) {
-    debugPrint(msg);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: Colors.red),
@@ -272,7 +271,7 @@ class _WantListState extends State<WantList> {
       child: Column(
         children: [
           Container(
-            margin: const EdgeInsets.all(10),
+            margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
             child:
                 InputSearch(onChanged: (v) => setState(() => _searchQuery = v)),
           ),

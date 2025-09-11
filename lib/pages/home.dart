@@ -110,9 +110,7 @@ class _HomeState extends State<Home> with RouteAware {
     final all = await isar.screenshots.where().findAll();
     if (!mounted) return;
     setState(() {
-      _isarScreenshotMap = {
-        for (var s in all.where((e) => e.assetId != null)) s.assetId: s
-      };
+      _isarScreenshotMap = {for (var s in all) s.assetId: s};
     });
   }
 
@@ -257,7 +255,6 @@ class _HomeState extends State<Home> with RouteAware {
   }
 
   Future<void> _showPopup(ItemData item) async {
-    final dbData = _isarScreenshotMap[item.id];
     final success = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.7),
@@ -267,9 +264,7 @@ class _HomeState extends State<Home> with RouteAware {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: PopupContainer(
-            assetEntity: item.assetEntity!,
-            title: dbData?.title,
-            location: dbData?.location,
+            item: item,
             onPressedEdit: () async {
               final edited = await showEditItemPopup(
                 context,
@@ -337,27 +332,32 @@ class _HomeState extends State<Home> with RouteAware {
 
   Widget _buildSearchBar() {
     return Container(
-      margin: const EdgeInsets.all(10.0),
-      child: Row(
-        children: [
-          InputSearch(
-            onChanged: (v) => setState(() {
-              _searchQuery = v;
-              _currentPage = 1;
-            }),
-          ),
-          const SizedBox(width: 10),
-          SelectTagPullButton(
-            tags: _allTags,
-            selectedTag: _selectedTag,
-            onTagSelected: (t) => setState(() {
-              _selectedTag = t;
-              _currentPage = 1;
-            }),
-          ),
-        ],
-      ),
-    );
+        margin: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: InputSearch(
+                onChanged: (v) => setState(() {
+                  _searchQuery = v;
+                  _currentPage = 1;
+                }),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 120,
+              child: SelectTagPullButton(
+                tags: _allTags,
+                selectedTag: _selectedTag,
+                shadow: true,
+                onTagSelected: (t) => setState(() {
+                  _selectedTag = t;
+                  _currentPage = 1;
+                }),
+              ),
+            ),
+          ],
+        ));
   }
 
   Widget _buildLoadingIndicator() {

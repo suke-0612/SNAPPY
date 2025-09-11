@@ -82,8 +82,7 @@ class DeleteItemService {
       // 3. 一括削除実行
       final List<String> assetIds =
           items.keys.map((asset) => asset.id).toList();
-      final List<String> result =
-          await PhotoManager.editor.deleteWithIds(assetIds);
+      await PhotoManager.editor.deleteWithIds(assetIds);
 
       // 4. DBから一括削除
       for (String assetId in items.values) {
