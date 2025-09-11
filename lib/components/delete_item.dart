@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/importer.dart';
 
 /// スクリーンショットとDBレコードを削除する関数

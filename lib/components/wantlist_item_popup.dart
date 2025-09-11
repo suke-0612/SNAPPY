@@ -75,24 +75,30 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
             _buildContentSection(),
           ],
         ),
-        // 右上のボタン群
+        // 右上のバツボタン
         Positioned(
           top: -10,
           right: -10,
           child: GestureDetector(
             onTap: () {
-              widget.onClose(); // まずポップアップを閉じる
-              widget.onDelete(); // その後削除処理を実行
+              widget.onClose();
             },
             child: Container(
               width: 35,
               height: 35,
               decoration: BoxDecoration(
-                color: Colors.red[700],
+                color: Colors.black87,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.delete,
+                Icons.close,
                 color: Colors.white,
                 size: 20,
               ),
@@ -225,6 +231,17 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
               ),
             ),
           ),
+        ),
+        const SizedBox(height: 12),
+        CustomButton(
+          label: "削除",
+          backgroundColor: Colors.red,
+          icon: Icons.delete,
+          fontColor: Colors.white,
+          onPressed: () async {
+            widget.onClose();
+            widget.onDelete();
+          },
         ),
       ],
     );
