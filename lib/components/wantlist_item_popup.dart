@@ -8,6 +8,7 @@ class WantListItemPopup extends StatefulWidget {
   final AssetEntity? assetEntity;
   final VoidCallback onAmazonSearch;
   final VoidCallback onClose;
+  final VoidCallback onDelete; // 削除用のコールバックを追加
 
   const WantListItemPopup({
     super.key,
@@ -15,6 +16,7 @@ class WantListItemPopup extends StatefulWidget {
     this.assetEntity,
     required this.onAmazonSearch,
     required this.onClose,
+    required this.onDelete, // 必須パラメータとして追加
   });
 
   @override
@@ -78,10 +80,12 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
           top: -10,
           right: -10,
           child: GestureDetector(
-            onTap: widget.onClose,
+            onTap: () {
+              widget.onClose();
+            },
             child: Container(
-              width: 32,
-              height: 32,
+              width: 35,
+              height: 35,
               decoration: BoxDecoration(
                 color: Colors.black87,
                 shape: BoxShape.circle,
@@ -209,24 +213,23 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: widget.onAmazonSearch,
-            icon: const Icon(Icons.shopping_cart, size: 20),
-            label: const Text(
-              'Amazon',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[700],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
+        CustomButton(
+          onPressed: widget.onAmazonSearch,
+          label: "Amazon",
+          backgroundColor: Colors.orange[700]!,
+          icon: Icons.shopping_cart,
+          fontColor: Colors.white,
+        ),
+        const SizedBox(height: 12),
+        CustomButton(
+          label: "削除",
+          backgroundColor: Colors.red,
+          icon: Icons.delete,
+          fontColor: Colors.white,
+          onPressed: () async {
+            widget.onClose();
+            widget.onDelete();
+          },
         ),
       ],
     );

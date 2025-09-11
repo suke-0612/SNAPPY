@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:snappy/importer.dart';
 
 class AddCategoryForm extends StatefulWidget {
-  const AddCategoryForm({super.key});
+  const AddCategoryForm({super.key, required this.onSubmit});
+
+  final Future<void> Function() onSubmit;
 
   @override
   State<AddCategoryForm> createState() => _AddCategoryFormState();
@@ -20,38 +22,43 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final categoryName = _nameController.text;
-      final categoryDescription = _descriptionController.text;
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      print('カテゴリ名: $categoryName');
-      print('説明: $categoryDescription');
+    final categoryName = _nameController.text.trim();
+    final categoryDescription = _descriptionController.text.trim();
 
-      try {
-        saveTags([
-          [categoryName, categoryDescription]
-        ]);
-      } catch (e) {
-        print('Error saving category: $e');
+    try {
+      // DBに保存（非同期）
+      await saveTags([
+        [categoryName, categoryDescription]
+      ]);
+    } catch (e) {
+      print('Error saving category: $e');
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('カテゴリの保存に失敗しました。')),
         );
-        return;
       }
+      return;
+    }
 
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('カテゴリを作成しました！')),
       );
-
       _nameController.clear();
       _descriptionController.clear();
     }
+
+    // 親に通知してタグリストを更新
+    await widget.onSubmit();
   }
 
   @override
   Widget build(BuildContext context) {
     final double formWidth = MediaQuery.of(context).size.width * 0.8;
+
     return Center(
       child: SizedBox(
         width: formWidth,
@@ -64,7 +71,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 'カテゴリ名',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -79,7 +86,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24.0),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   const Text(
@@ -106,7 +113,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
@@ -116,14 +123,15 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 ),
                 maxLines: 4,
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 32),
               Align(
                 alignment: Alignment.centerRight,
                 child: CustomButton(
                   label: '作成',
                   onPressed: _submitForm,
-                  backgroundColor: const Color(0xFFA1CCA6),
+                  backgroundColor: Colors.green[400]!,
                   fontColor: Colors.white,
+                  size: Size(formWidth * 0.3, 50),
                 ),
               ),
             ],
