@@ -1,25 +1,23 @@
 import 'dart:typed_data';
-
 import 'package:photo_manager/photo_manager.dart';
-import 'package:flutter/material.dart';
 import 'package:snappy/importer.dart';
 
 class ItemData {
   final String id;
   final String text;
   final String category;
+  final String? location;
   final String description;
   final AssetEntity? assetEntity;
-  final Widget? onTapPopupContent;
   final Uint8List? thumbnailBytes;
 
   ItemData({
     required this.id,
     required this.text,
     required this.category,
+    this.location,
     required this.description,
     this.assetEntity,
     this.thumbnailBytes,
-    required this.onTapPopupContent,
   });
 }

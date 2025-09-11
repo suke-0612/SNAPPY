@@ -99,16 +99,12 @@ class _MapPageState extends State<MapPage> {
       final screenshots =
           await isar.screenshots.filter().tagEqualTo('location').findAll();
 
-      debugPrint('取得したlocationタグのスクリーンショット数: ${screenshots.length}');
-
       if (!mounted) return;
 
       // location フィールドが null でないものだけフィルタ
       final validScreenshots = screenshots
           .where((s) => s.location != null && s.location!.isNotEmpty)
           .toList();
-
-      debugPrint('有効な位置情報を持つスクリーンショット数: ${validScreenshots.length}');
 
       _locationScreenshots = validScreenshots;
       await _createMarkers();
@@ -147,8 +143,6 @@ class _MapPageState extends State<MapPage> {
       // 1. まずIsarから緯度・経度を取得
       if (screenshot.latitude != null && screenshot.longitude != null) {
         coordinates = LatLng(screenshot.latitude!, screenshot.longitude!);
-        debugPrint(
-            'Isarから座標取得: ${screenshot.title} - ${coordinates.latitude}, ${coordinates.longitude}');
       } else {
         // 2. 緯度・経度がない場合はジオコーディングを実行
         debugPrint('緯度・経度がないため、ジオコーディング実行: ${screenshot.location}');
@@ -163,18 +157,17 @@ class _MapPageState extends State<MapPage> {
             infoWindow: InfoWindow(
               title: screenshot.title ?? 'タイトルなし',
               snippet: 'タップして詳細を表示',
+              onTap: () {
+                // InfoWindowがタップされたときに詳細表示
+                if (mounted) {
+                  _showScreenshotDetails(screenshot);
+                }
+              },
             ),
             icon:
                 BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            onTap: () {
-              if (mounted) {
-                _showScreenshotDetails(screenshot);
-              }
-            },
           );
           markers.add(marker);
-          debugPrint(
-              'マーカー作成成功: ${screenshot.title} at ${coordinates.latitude}, ${coordinates.longitude}');
         } catch (e) {
           debugPrint('マーカー作成エラー: $e');
         }
@@ -212,8 +205,6 @@ class _MapPageState extends State<MapPage> {
           await isar.screenshots.put(screenshot);
         });
 
-        debugPrint(
-            '緯度・経度をIsarに保存: ${screenshot.title} - ${coordinates.latitude}, ${coordinates.longitude}');
         return coordinates;
       }
     } catch (e) {
@@ -231,14 +222,10 @@ class _MapPageState extends State<MapPage> {
         searchAddress = '$address, 日本';
       }
 
-      debugPrint('Google Geocoding API実行: $searchAddress');
-
       final result =
           await GoogleGeocodingService.getCoordinatesFromAddress(searchAddress);
 
       if (result != null) {
-        debugPrint('Geocoding成功: ${result.latitude}, ${result.longitude}');
-        debugPrint('正規化された住所: ${result.formattedAddress}');
         return LatLng(result.latitude, result.longitude);
       } else {
         debugPrint('Geocoding結果なし: $searchAddress');
@@ -298,16 +285,13 @@ class _MapPageState extends State<MapPage> {
 
   /// ズームイン
   Future<void> _zoomIn() async {
-    debugPrint('ズームイン開始: 現在のズーム = $_currentZoom');
     if (_mapController != null) {
       final newZoom = _currentZoom + 1;
-      debugPrint('新しいズーム値: $newZoom');
       if (newZoom <= 20) {
         await _mapController!.animateCamera(CameraUpdate.zoomTo(newZoom));
         setState(() {
           _currentZoom = newZoom;
         });
-        debugPrint('ズームイン完了: $_currentZoom');
       } else {
         debugPrint('ズームイン制限: 最大ズーム値に達しています');
       }
@@ -318,16 +302,13 @@ class _MapPageState extends State<MapPage> {
 
   /// ズームアウト
   Future<void> _zoomOut() async {
-    debugPrint('ズームアウト開始: 現在のズーム = $_currentZoom');
     if (_mapController != null) {
       final newZoom = _currentZoom - 1;
-      debugPrint('新しいズーム値: $newZoom');
       if (newZoom >= 1) {
         await _mapController!.animateCamera(CameraUpdate.zoomTo(newZoom));
         setState(() {
           _currentZoom = newZoom;
         });
-        debugPrint('ズームアウト完了: $_currentZoom');
       } else {
         debugPrint('ズームアウト制限: 最小ズーム値に達しています');
       }
@@ -449,7 +430,6 @@ class _MapPageState extends State<MapPage> {
                   heroTag: "zoom_in",
                   onPressed: _currentZoom < 20
                       ? () {
-                          debugPrint('ズームインボタンが押されました (現在: $_currentZoom)');
                           _zoomIn();
                         }
                       : null,
@@ -464,7 +444,6 @@ class _MapPageState extends State<MapPage> {
                 heroTag: "zoom_out",
                 onPressed: _currentZoom > 1
                     ? () {
-                        debugPrint('ズームアウトボタンが押されました (現在: $_currentZoom)');
                         _zoomOut();
                       }
                     : null,
@@ -517,19 +496,19 @@ class _MapPageState extends State<MapPage> {
 
   /// 空の状態を表示
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.location_off, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.location_off, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
             'locationタグの位置情報がありません',
             style: TextStyle(color: Colors.grey, fontSize: 16),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'ホーム画面でスクリーンショットに\n"location"タグと住所を付けてください',
             style: TextStyle(color: Colors.grey, fontSize: 14),
             textAlign: TextAlign.center,

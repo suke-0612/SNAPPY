@@ -3,13 +3,11 @@ import 'package:snappy/importer.dart';
 
 class EditItemInfoForm extends StatefulWidget {
   final ItemData item;
-  final VoidCallback onSubmit;
   final Future<void> Function() onRefresh;
 
   const EditItemInfoForm({
     super.key,
     required this.item,
-    required this.onSubmit,
     required this.onRefresh,
   });
 
@@ -19,14 +17,13 @@ class EditItemInfoForm extends StatefulWidget {
 
 class _EditItemInfoFormState extends State<EditItemInfoForm> {
   List<String> _categoryOptions = [];
-  late Future<void> _loadCategoriesFuture;
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _titleController;
   late final TextEditingController _categoryController;
   late final TextEditingController _descriptionController;
+  late final TextEditingController _locationController;
 
-  // DropdownButtonの選択値を保持するための状態変数
   late String _selectedCategory;
 
   @override
@@ -38,8 +35,9 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
     _selectedCategory = widget.item.category;
     _descriptionController =
         TextEditingController(text: widget.item.description);
+    _locationController = TextEditingController(text: widget.item.location);
 
-    _loadCategoriesFuture = _loadCategories();
+    _loadCategories();
   }
 
   Future<void> _loadCategories() async {
@@ -51,7 +49,6 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
           ? names + ['location', 'things', 'others']
           : ['location', 'things', 'others'];
 
-      // 選択カテゴリが存在しなければ最初のタグをセット
       if (!_categoryOptions.contains(_selectedCategory)) {
         _selectedCategory = _categoryOptions.first;
         _categoryController.text = _selectedCategory;
@@ -64,6 +61,7 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
     _titleController.dispose();
     _categoryController.dispose();
     _descriptionController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -78,14 +76,15 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
             .findFirst();
 
         if (screenshot != null) {
-          print('Before update title: ${screenshot.title}');
           screenshot.title = _titleController.text;
           screenshot.tag = _categoryController.text;
           screenshot.description = _descriptionController.text;
+          screenshot.location = _locationController.text.isNotEmpty
+              ? _locationController.text
+              : null;
           await isar.screenshots.put(screenshot);
         }
       });
-
       // DB更新後に再取得して最新タイトルを取得
       final updatedScreenshot = await isar.screenshots
           .filter()
@@ -95,73 +94,54 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
       print('After update title: ${updatedScreenshot?.title}');
 
       // 編集完了後にDBの最新データを再取得
-      if (widget.onRefresh != null) {
-        print('Refreshing data...');
-        await widget.onRefresh!();
-      }
+      print('Refreshing data...');
+      await widget.onRefresh();
 
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('編集内容を保存しました')));
+        Navigator.of(context).pop(true);
       }
-      widget.onSubmit();
+      // widget.onSubmit();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // 背景タップでキーボード閉じる
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior:
+                ScrollViewKeyboardDismissBehavior.onDrag, // スクロールで閉じる
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
                   '編集',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'タイトル',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                const Text('タイトル',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
                     hintText: 'タイトルを入力',
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 0.5, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 0.5, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'タイトルを入力してください';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'タイトルを入力してください' : null,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'カテゴリ',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                const Text('カテゴリ',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -170,6 +150,8 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                     child: SelectTagPullButton(
                       tags: _categoryOptions,
                       selectedTag: _selectedCategory,
+                      borderRadius: 10,
+                      borderColor: Colors.grey[600],
                       onTagSelected: (String value) {
                         setState(() {
                           _selectedCategory = value;
@@ -180,40 +162,44 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  '説明',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
+                const Text('説明',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
                     hintText: '説明を入力',
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 0.5, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 0.5, color: Colors.grey),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
                   ),
                   maxLines: 4,
                 ),
+                const SizedBox(height: 16),
+                if (_categoryController.text == 'location') ...[
+                  const Text('位置情報',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(
+                      hintText: '例: 東京駅 / 35.6812,139.7671',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10))),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 CustomButton(
-                  onPressed: () async {
-                    await _submitForm();
-                  },
+                  onPressed: _submitForm,
                   label: "確定",
                   backgroundColor: Colors.black,
                   fontColor: Colors.white,
                 ),
-              ]),
+              ],
+            ),
+          ),
         ),
       ),
     );

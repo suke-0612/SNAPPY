@@ -5,22 +5,18 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:snappy/importer.dart';
 
 class PopupContainer extends StatefulWidget {
-  final AssetEntity assetEntity;
-  final String? title;
-  final String? location;
-  final VoidCallback? onPressedAddMap; // オプショナルに変更
+  final ItemData item;
+  final VoidCallback? onPressedAddMap;
   final VoidCallback onPressedEdit;
   final VoidCallback onPressedDelete;
 
   const PopupContainer({
-    Key? key,
-    required this.assetEntity,
-    required this.title,
-    this.location,
-    this.onPressedAddMap, // オプショナルに変更
+    super.key,
+    required this.item,
+    this.onPressedAddMap,
     required this.onPressedEdit,
     required this.onPressedDelete,
-  }) : super(key: key);
+  });
 
   @override
   _PopupContainerState createState() => _PopupContainerState();
@@ -37,8 +33,8 @@ class _PopupContainerState extends State<PopupContainer> {
   }
 
   Future<void> _loadThumbnail() async {
-    final data =
-        await widget.assetEntity.thumbnailDataWithSize(ThumbnailSize(300, 400));
+    final data = await widget.item.assetEntity
+        ?.thumbnailDataWithSize(ThumbnailSize(300, 400));
     if (mounted) {
       setState(() {
         thumbnailBytes = data;
@@ -48,14 +44,11 @@ class _PopupContainerState extends State<PopupContainer> {
   }
 
   Future<void> _openMapView(BuildContext context) async {
-    // デバッグ用：locationデータを確認
-    print('Location data: ${widget.location}');
-
-    if (widget.location != null && widget.location!.isNotEmpty) {
-      Navigator.of(context).pop(); // 現在のポップアップを閉じる
+    if (widget.item.location != null && widget.item.location!.isNotEmpty) {
+      Navigator.of(context).pop();
 
       // 直接Google MapsのURLを開く
-      final encodedLocation = Uri.encodeComponent(widget.location!);
+      final encodedLocation = Uri.encodeComponent(widget.item.location!);
       final url =
           'https://www.google.com/maps/search/?api=1&query=$encodedLocation';
 
@@ -107,7 +100,7 @@ class _PopupContainerState extends State<PopupContainer> {
         ),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min, // 高さを必要最低限に抑える
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (isLoading)
                 SizedBox(
@@ -121,9 +114,12 @@ class _PopupContainerState extends State<PopupContainer> {
                     maxWidth: maxWidth * 0.8,
                     maxHeight: maxHeight * 0.5,
                   ),
-                  child: Image.memory(
-                    thumbnailBytes!,
-                    fit: BoxFit.contain, // はみ出さずに収まる
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.memory(
+                      thumbnailBytes!,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 )
               else
@@ -131,8 +127,8 @@ class _PopupContainerState extends State<PopupContainer> {
                   width: maxWidth * 0.8,
                   height: maxHeight * 0.5,
                   decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(8.0),
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.image_not_supported_outlined,
@@ -141,23 +137,52 @@ class _PopupContainerState extends State<PopupContainer> {
                   ),
                 ),
               const SizedBox(height: 16),
+              if (widget.item.category.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      widget.item.category,
+                      style: const TextStyle(
+                        decoration: TextDecoration.none,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
               Text(
-                widget.title ?? '情報なし',
+                widget.item.text,
                 style: const TextStyle(
+                  decoration: TextDecoration.none,
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.none,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black45,
+                      offset: Offset(0, 2),
+                      blurRadius: 4,
+                    )
+                  ],
                 ),
                 textAlign: TextAlign.center,
               ),
-              // 位置情報の表示と地図ボタン
-              if (widget.location != null && widget.location!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              if (widget.item.location != null &&
+                  widget.item.location!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  widget.location!,
+                  widget.item.location!,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.white70,
                     fontSize: 18,
                     decoration: TextDecoration.none,
                   ),
@@ -166,12 +191,14 @@ class _PopupContainerState extends State<PopupContainer> {
                 const SizedBox(height: 16),
                 CustomButton(
                   onPressed: () => _openMapView(context),
-                  label: '地図を開く',
+                  label: '地図アプリを開く',
                   icon: Icons.map,
                   iconSize: 20.0,
                   backgroundColor: Colors.white,
-                  fontColor: Colors.black,
+                  fontColor: Colors.black87,
                   size: Size(maxWidth * 0.8, 50),
+                  borderRadius: 12,
+                  elevation: 5,
                 ),
               ],
               const SizedBox(height: 10),
@@ -183,9 +210,11 @@ class _PopupContainerState extends State<PopupContainer> {
                     label: '編集',
                     icon: Icons.edit,
                     iconSize: 24.0,
-                    backgroundColor: const Color(0xFFF98E6E),
+                    backgroundColor: Colors.deepOrange[300]!,
                     fontColor: Colors.white,
                     size: Size(maxWidth * 0.38, 50),
+                    borderRadius: 12,
+                    elevation: 5,
                   ),
                   const SizedBox(width: 10),
                   CustomButton(
@@ -193,9 +222,11 @@ class _PopupContainerState extends State<PopupContainer> {
                     label: '削除',
                     icon: Icons.delete,
                     iconSize: 24.0,
-                    backgroundColor: const Color(0xFFDE543F),
+                    backgroundColor: Colors.red[400]!,
                     fontColor: Colors.white,
                     size: Size(maxWidth * 0.38, 50),
+                    borderRadius: 12,
+                    elevation: 5,
                   ),
                 ],
               ),

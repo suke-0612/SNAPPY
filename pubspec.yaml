@@ -75,6 +75,36 @@ flutter:
     - assets/launcher_icon/snappy_android_icon.png
     - .env
     # - assets/images/ポラリス_QUICK_LUNCH.png
+  fonts:
+    - family: NotoSansJP # アプリ内で使用するフォントファミリー名
+      fonts:
+        # Thin (100)
+        - asset: assets/fonts/NotoSansJP-Thin.ttf
+          weight: 100
+        # ExtraLight (200)
+        - asset: assets/fonts/NotoSansJP-ExtraLight.ttf
+          weight: 200
+        # Light (300)
+        - asset: assets/fonts/NotoSansJP-Light.ttf
+          weight: 300
+        # Regular (400 - Normal)
+        - asset: assets/fonts/NotoSansJP-Regular.ttf
+          weight: 400
+        # Medium (500)
+        - asset: assets/fonts/NotoSansJP-Medium.ttf
+          weight: 500
+        # SemiBold (600)
+        - asset: assets/fonts/NotoSansJP-SemiBold.ttf
+          weight: 600
+        # Bold (700)
+        - asset: assets/fonts/NotoSansJP-Bold.ttf
+          weight: 700
+        # ExtraBold (800)
+        - asset: assets/fonts/NotoSansJP-ExtraBold.ttf
+          weight: 800
+        # Black (900)
+        - asset: assets/fonts/NotoSansJP-Black.ttf
+          weight: 900
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
@@ -101,12 +131,12 @@ flutter:
 # For details regarding fonts from package dependencies,
 # see https://flutter.dev/custom-fonts/#from-packages
 
-flutter_icons: 
+flutter_icons:
   image_path_android: assets/launcher_icon/snappy_android_icon.png
-  adaptive_icon_background: '#FFFFFF' #iconの背景色
+  adaptive_icon_background: "#FFFFFF" #iconの背景色
   adaptive_icon_foreground: assets/launcher_icon/snappy_android_icon.png
   image_path_ios: assets/launcher_icon/snappy_iphone_icon.png
   android: true
   adaptive_icon_padding: true
   min_sdk_android: 30 #Androidの最小SDKバージョン
-  ios: true   
+  ios: true

@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
-import '../importer.dart';
-import '../components/edit_item_info_popup/edit_item_info_popup.dart';
-import '../components/delete_item.dart';
-import '../components/popup_container.dart';
+import 'package:snappy/importer.dart';
 
 /// スクリーンショットに対するアクション（編集・削除）を共通化するサービス
 class ScreenshotActionsService {
@@ -16,18 +12,9 @@ class ScreenshotActionsService {
       id: screenshot.assetId,
       text: screenshot.title ?? '',
       category: screenshot.tag ?? 'location',
+      location: screenshot.location ?? '',
       description: screenshot.description ?? '',
       assetEntity: assetEntity,
-      onTapPopupContent: Text(
-        'Asset ID: ${screenshot.assetId}\n'
-        'タグ: ${screenshot.tag ?? "なし"}\n'
-        'タイトル: ${screenshot.title ?? "なし"}\n'
-        '場所: ${screenshot.location ?? "不明"}\n'
-        '説明: ${screenshot.description ?? "なし"}\n',
-        style: const TextStyle(
-          decoration: TextDecoration.none,
-        ),
-      ),
     );
   }
 
@@ -36,7 +23,7 @@ class ScreenshotActionsService {
     required BuildContext context,
     required Screenshot screenshot,
     required AssetEntity assetEntity,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
   }) {
     final ItemData item = createItemDataFromScreenshot(
       screenshot: screenshot,
@@ -44,17 +31,17 @@ class ScreenshotActionsService {
     );
 
     Navigator.of(context).pop(); // 現在のダイアログを閉じる
-    showEditItemPopup(context, item: item, onEdit: onRefresh);
+    showEditItemPopup(context, item: item, onRefresh: onRefresh);
   }
 
   /// 編集アクションを実行（ItemData版）
   static void executeEditActionFromItem({
     required BuildContext context,
     required ItemData item,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
   }) {
     Navigator.of(context).pop(); // 現在のダイアログを閉じる
-    showEditItemPopup(context, item: item, onEdit: onRefresh);
+    showEditItemPopup(context, item: item, onRefresh: onRefresh);
   }
 
   /// 削除アクションを実行（Screenshot版）
@@ -103,7 +90,7 @@ class ScreenshotActionsService {
     required BuildContext context,
     required Screenshot screenshot,
     required AssetEntity assetEntity,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
     Function(String)? onError,
   }) {
     return {
@@ -127,7 +114,7 @@ class ScreenshotActionsService {
   static Map<String, VoidCallback> generatePopupCallbacksFromItem({
     required BuildContext context,
     required ItemData item,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
     Function(String)? onError,
   }) {
     return {
@@ -150,7 +137,7 @@ class ScreenshotActionsService {
     required BuildContext context,
     required Screenshot screenshot,
     required AssetEntity assetEntity,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
     Function(String)? onError,
   }) {
     final callbacks = generatePopupCallbacks(
@@ -166,9 +153,10 @@ class ScreenshotActionsService {
       barrierColor: Colors.black.withOpacity(0.8),
       builder: (context) {
         return PopupContainer(
-          assetEntity: assetEntity,
-          title: screenshot.title,
-          location: screenshot.location,
+          item: createItemDataFromScreenshot(
+            screenshot: screenshot,
+            assetEntity: assetEntity,
+          ),
           onPressedEdit: callbacks['onEdit']!,
           onPressedDelete: callbacks['onDelete']!,
         );
@@ -182,7 +170,7 @@ class ScreenshotActionsService {
     required ItemData item,
     String? title,
     String? location,
-    VoidCallback? onRefresh,
+    required Future<void> Function() onRefresh,
     Function(String)? onError,
   }) {
     final callbacks = generatePopupCallbacksFromItem(
@@ -201,9 +189,7 @@ class ScreenshotActionsService {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: PopupContainer(
-            assetEntity: item.assetEntity!,
-            title: title,
-            location: location,
+            item: item,
             onPressedEdit: callbacks['onEdit']!,
             onPressedDelete: callbacks['onDelete']!,
           ),

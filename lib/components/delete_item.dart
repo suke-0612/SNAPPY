@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/importer.dart';
 
 /// スクリーンショットとDBレコードを削除する関数
@@ -13,7 +11,6 @@ class DeleteItemService {
     Function(String)? onError,
   }) async {
     try {
-      // 写真削除の権限を確認
       final PermissionState permissionState =
           await PhotoManager.requestPermissionExtend();
 
@@ -24,19 +21,22 @@ class DeleteItemService {
         return;
       }
 
-      // スマートフォンからスクリーンショットを削除
       final List<String> result =
           await PhotoManager.editor.deleteWithIds([assetEntity.id]);
-
-      // DBからレコードを削除
+      if (result.isEmpty) {
+        onError?.call('スクリーンショットの削除に失敗しました。');
+        return;
+      }
       await _deleteFromDatabase(assetId);
 
-      // 成功時の処理
       if (onSuccess != null) {
         onSuccess();
       }
     } catch (e) {
-      null;
+      final errorMessage = 'スクリーンショット削除に失敗しました: ${e.toString()}';
+      if (onError != null) {
+        onError(errorMessage);
+      }
     }
   }
 
@@ -82,8 +82,7 @@ class DeleteItemService {
       // 3. 一括削除実行
       final List<String> assetIds =
           items.keys.map((asset) => asset.id).toList();
-      final List<String> result =
-          await PhotoManager.editor.deleteWithIds(assetIds);
+      await PhotoManager.editor.deleteWithIds(assetIds);
 
       // 4. DBから一括削除
       for (String assetId in items.values) {
