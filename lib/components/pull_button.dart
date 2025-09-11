@@ -4,12 +4,14 @@ class SelectTagPullButton extends StatelessWidget {
   final List<String> tags;
   final String selectedTag;
   final Function(String) onTagSelected;
+  final Color? borderColor;
 
   const SelectTagPullButton({
     super.key,
     required this.tags,
     required this.selectedTag,
     required this.onTagSelected,
+    this.borderColor,
   });
 
   @override
@@ -19,7 +21,7 @@ class SelectTagPullButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: borderColor ?? Colors.grey[300]!),
       ),
       child: DropdownButton<String>(
         value: selectedTag,

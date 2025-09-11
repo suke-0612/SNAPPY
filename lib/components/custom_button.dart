@@ -1,74 +1,73 @@
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
-    final String? label;
-    final VoidCallback onPressed;
-    final Color? backgroundColor;
-    final Size? size;
-    final Color? fontColor;
-    final IconData? icon;
-    final double? iconSize;
+  final String? label;
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final Color fontColor;
+  final Size? size;
+  final IconData? icon;
+  final double? iconSize;
+  final double borderRadius;
+  final double elevation;
+  final EdgeInsetsGeometry padding;
 
-    const CustomButton({
-        Key? key,
-        this.label,
-        required this.onPressed,
-        this.backgroundColor,
-        this.size,
-        this.fontColor, 
-        this.icon,
-        this.iconSize,
-    }) : super(key: key);
+  const CustomButton({
+    Key? key,
+    this.label,
+    required this.onPressed,
+    this.backgroundColor = Colors.black,
+    this.fontColor = Colors.white,
+    this.size,
+    this.icon,
+    this.iconSize = 24,
+    this.borderRadius = 16,
+    this.elevation = 4,
+    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  }) : super(key: key);
 
-    @override
-    Widget build(BuildContext context) {
-    final ButtonStyle  style = ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor,
-            fixedSize: size,
-            foregroundColor: fontColor, 
-            textStyle: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-        ),
-    );
-
+  @override
+  Widget build(BuildContext context) {
     final bool hasIcon = icon != null;
     final bool hasLabel = label != null && label!.isNotEmpty;
 
-    if (hasIcon && !hasLabel){
-        return  ElevatedButton(
-        style: style.copyWith(
-          backgroundColor: MaterialStateProperty.all(Colors.transparent),
-          elevation: MaterialStateProperty.all(0),
-          
+    final Widget childContent = hasIcon && hasLabel
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: iconSize, color: fontColor),
+              const SizedBox(width: 8),
+              Text(label!,
+                  style:
+                      TextStyle(color: fontColor, fontWeight: FontWeight.bold)),
+            ],
+          )
+        : hasIcon
+            ? Icon(icon, size: iconSize, color: fontColor)
+            : hasLabel
+                ? Text(label!,
+                    style: TextStyle(
+                        color: fontColor, fontWeight: FontWeight.bold))
+                : const SizedBox();
+
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      elevation: elevation,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(borderRadius),
+        splashColor: fontColor.withOpacity(0.2),
+        highlightColor: fontColor.withOpacity(0.1),
+        onTap: onPressed,
+        child: Container(
+          padding: padding,
+          alignment: Alignment.center,
+          constraints: size != null
+              ? BoxConstraints.tight(size!)
+              : const BoxConstraints(minHeight: 48),
+          child: childContent,
         ),
-        onPressed: onPressed,
-        child: Icon(icon, size: iconSize),
-      );
-    }
-
-    else if (hasIcon && hasLabel){
-        return ElevatedButton.icon(
-        style: style,
-        onPressed: onPressed,
-        icon: Icon(icon!, size: iconSize),
-        label: Text(label!),
-      );
-    }
-
-    else if (!hasIcon && hasLabel){
-      return ElevatedButton(
-        style: style,
-        onPressed: onPressed,
-        child: Text(label!),
-      );
-    }
-    else {
-        return ElevatedButton(
-        style: style,
-        onPressed: onPressed,
-        child: Text("Button"),
-      );
-    }
-    }
+      ),
+    );
+  }
 }

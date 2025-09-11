@@ -11,7 +11,6 @@ class DeleteItemService {
     Function(String)? onError,
   }) async {
     try {
-      // 写真削除の権限を確認
       final PermissionState permissionState =
           await PhotoManager.requestPermissionExtend();
 
@@ -22,19 +21,22 @@ class DeleteItemService {
         return;
       }
 
-      // スマートフォンからスクリーンショットを削除
       final List<String> result =
           await PhotoManager.editor.deleteWithIds([assetEntity.id]);
-
-      // DBからレコードを削除
+      if (result.isEmpty) {
+        onError?.call('スクリーンショットの削除に失敗しました。');
+        return;
+      }
       await _deleteFromDatabase(assetId);
 
-      // 成功時の処理
       if (onSuccess != null) {
         onSuccess();
       }
     } catch (e) {
-      null;
+      final errorMessage = 'スクリーンショット削除に失敗しました: ${e.toString()}';
+      if (onError != null) {
+        onError(errorMessage);
+      }
     }
   }
 

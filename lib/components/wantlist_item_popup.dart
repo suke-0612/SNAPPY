@@ -213,24 +213,12 @@ class _WantListItemPopupState extends State<WantListItemPopup> {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: widget.onAmazonSearch,
-            icon: const Icon(Icons.shopping_cart, size: 20),
-            label: const Text(
-              'Amazon',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[700],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
+        CustomButton(
+          onPressed: widget.onAmazonSearch,
+          label: "Amazon",
+          backgroundColor: Colors.orange[700]!,
+          icon: Icons.shopping_cart,
+          fontColor: Colors.white,
         ),
         const SizedBox(height: 12),
         CustomButton(
