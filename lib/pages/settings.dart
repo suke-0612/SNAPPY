@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/components/base_screen.dart';
+import 'package:snappy/components/custom_button.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -56,45 +57,65 @@ class _SettingsState extends State<Settings> {
       body: BaseScreen(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, color: statusColor, size: 40),
-                        const SizedBox(width: 16),
-                        Text(
-                          statusText,
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 8.0),
+                  alignment: Alignment.centerLeft,
+                  child: const Row(
+                    children: [
+                      Icon(Icons.photo, color: Colors.black),
+                      SizedBox(width: 8),
+                      Text(
+                        '写真アクセスの設定',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 8.0),
+                  child: Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Icon(statusIcon, color: statusColor, size: 30),
+                          const SizedBox(width: 16),
+                          Text(
+                            statusText,
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: statusColor),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
                 if (_permissionState == PermissionState.limited)
-                  SizedBox(
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20.0),
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: CustomButton(
                       onPressed: _addAccess,
-                      icon: const Icon(Icons.add_photo_alternate),
-                      label: const Text('他の写真へのアクセスを追加'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
+                      label: '他の写真へのアクセスを追加',
+                      backgroundColor: Colors.orange[800]!,
                     ),
                   ),
               ],

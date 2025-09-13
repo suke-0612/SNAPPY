@@ -129,7 +129,7 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 child: CustomButton(
                   label: '作成',
                   onPressed: _submitForm,
-                  backgroundColor: Colors.green[400]!,
+                  backgroundColor: Colors.teal[400]!,
                   fontColor: Colors.white,
                   size: Size(formWidth * 0.3, 50),
                 ),
