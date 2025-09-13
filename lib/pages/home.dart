@@ -49,7 +49,7 @@ class _HomeState extends State<Home> with RouteAware {
         id: asset.id,
         text: dbData?.title ?? '',
         location: dbData?.location ?? '',
-        category: dbData?.tag ?? 'その他',
+        category: dbData?.tag ?? 'loading',
         description: dbData?.description ?? 'なし',
         assetEntity: asset,
         thumbnailBytes: null,
