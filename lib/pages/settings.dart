@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:snappy/components/base_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -10,7 +11,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  PermissionState _permissionState = PermissionState.denied;
+  PermissionStatus _permissionStatus = PermissionStatus.denied;
 
   @override
   void initState() {
@@ -19,17 +20,17 @@ class _SettingsState extends State<Settings> {
   }
 
   Future<void> _checkPermission() async {
-    final ps = await PhotoManager.requestPermissionExtend();
-    setState(() {
-      _permissionState = ps;
-    });
+    final status = await Permission.photos.request();
+    if (mounted) {
+      setState(() {
+        _permissionStatus = status;
+      });
+    }
   }
 
   Future<void> _addAccess() async {
-    if (_permissionState == PermissionState.limited) {
-      await PhotoManager.presentLimited();
-      await _checkPermission();
-    }
+    await PhotoManager.presentLimited();
+    await _checkPermission();
   }
 
   @override
@@ -38,11 +39,11 @@ class _SettingsState extends State<Settings> {
     Color statusColor;
     IconData statusIcon;
 
-    if (_permissionState == PermissionState.authorized) {
+    if (_permissionStatus == PermissionStatus.granted) {
       statusText = 'フルアクセス許可済み';
       statusColor = Colors.green;
       statusIcon = Icons.check_circle_outline;
-    } else if (_permissionState == PermissionState.limited) {
+    } else if (_permissionStatus == PermissionStatus.limited) {
       statusText = '限定アクセス許可済み';
       statusColor = Colors.orange;
       statusIcon = Icons.photo_library_outlined;
@@ -83,7 +84,7 @@ class _SettingsState extends State<Settings> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                if (_permissionState == PermissionState.limited)
+                if (_permissionStatus.isLimited)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
