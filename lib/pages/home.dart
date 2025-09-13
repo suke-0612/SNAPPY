@@ -557,7 +557,7 @@ class _HomeState extends State<Home> with RouteAware {
             return const LinearGradient(
               colors: [
                 Color(0xFFF98E6E),
-                Color.fromARGB(255, 49, 47, 43)
+                Color.fromARGB(255, 145, 54, 33)
               ], // 赤→オレンジ
             ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
           },
@@ -580,20 +580,12 @@ class _HomeState extends State<Home> with RouteAware {
                     color: Colors.white,
                   ),
                 ),
-                const TextSpan(
-                  text: ' of ',
-                  style: TextStyle(
+                TextSpan(
+                  text: ' of $totalItems',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Colors.black,
-                  ),
-                ),
-                TextSpan(
-                  text: '$totalItems',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
                   ),
                 ),
               ],

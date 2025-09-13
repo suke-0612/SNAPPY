@@ -331,7 +331,7 @@ class _MapPageState extends State<MapPage> {
                 const Icon(Icons.map, color: Colors.black),
                 const SizedBox(width: 8),
                 Text(
-                  '位置情報マップ (${_locationScreenshots.length}件)',
+                  'マップ (${_locationScreenshots.length}件)',
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 18,

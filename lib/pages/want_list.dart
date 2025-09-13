@@ -18,7 +18,6 @@ class _WantListState extends State<WantList> {
   Map<String, AssetEntity> _assetEntityMap = {};
   bool _loading = true;
   String _searchQuery = '';
-  bool _isSelecting = false;
   final Set<String> _selectedItems = {};
 
   @override
@@ -151,67 +150,6 @@ class _WantListState extends State<WantList> {
     );
   }
 
-  Widget _buildListItem(ItemData item) {
-    final isSelected = _selectedItems.contains(item.id);
-    final s = _isarScreenshotMap[item.id];
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      color: isSelected ? Colors.grey.shade300 : Colors.white,
-      child: ListTile(
-        leading: _isSelecting
-            ? Icon(isSelected ? Icons.check_circle : Icons.circle_outlined,
-                color: isSelected ? Colors.black : Colors.grey)
-            : null,
-        title: Text(s?.title ?? 'タイトルなし',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-        trailing: _isSelecting
-            ? null
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shopping_cart,
-                      color: Colors.orange[700], size: 20),
-                  Text('Amazon',
-                      style: TextStyle(
-                          color: Colors.orange[700],
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-        onTap: () {
-          if (_isSelecting) {
-            _toggleSelection(item.id);
-          } else {
-            _showItemDetails(item);
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-              _searchQuery.isEmpty
-                  ? '"$_thingsTag" タグのアイテムがありません'
-                  : '検索結果が見つかりませんでした',
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-              textAlign: TextAlign.center),
-          if (_searchQuery.isEmpty) const SizedBox(height: 8),
-          if (_searchQuery.isEmpty)
-            const Text('ホーム画面でスクリーンショットに\n"things"タグを付けてください',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-                textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-
   void _toggleSelection(String id) {
     setState(() {
       if (_selectedItems.contains(id)) {
@@ -222,11 +160,28 @@ class _WantListState extends State<WantList> {
     });
   }
 
-  void _toggleSelectMode() {
-    setState(() {
-      _isSelecting = !_isSelecting;
-      if (!_isSelecting) _selectedItems.clear();
-    });
+  Widget _buildListItem(ItemData item) {
+    final isSelected = _selectedItems.contains(item.id);
+    final s = _isarScreenshotMap[item.id];
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: isSelected ? Colors.grey.shade300 : Colors.white,
+      child: ListTile(
+        leading: GestureDetector(
+          onTap: () => _toggleSelection(item.id),
+          child: Icon(
+            isSelected ? Icons.check_circle : Icons.circle_outlined,
+            color: isSelected ? Colors.black : Colors.grey,
+          ),
+        ),
+        title: Text(
+          s?.title ?? 'タイトルなし',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        onTap: () => _showItemDetails(item),
+      ),
+    );
   }
 
   Future<void> _deleteItem(String id) async {
@@ -260,9 +215,31 @@ class _WantListState extends State<WantList> {
     }
     setState(() {
       _selectedItems.clear();
-      _isSelecting = false;
     });
     _showSuccess('選択したアイテムを削除しました');
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+              _searchQuery.isEmpty
+                  ? '"$_thingsTag" タグのアイテムがありません'
+                  : '検索結果が見つかりませんでした',
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              textAlign: TextAlign.center),
+          if (_searchQuery.isEmpty) const SizedBox(height: 8),
+          if (_searchQuery.isEmpty)
+            const Text('ホーム画面でスクリーンショットに\n"things"タグを付けてください',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+                textAlign: TextAlign.center),
+        ],
+      ),
+    );
   }
 
   @override
@@ -280,20 +257,25 @@ class _WantListState extends State<WantList> {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                if (!_isSelecting)
-                  const Icon(Icons.inventory_2, color: Colors.black),
+                const Icon(Icons.inventory_2, color: Colors.black),
                 const SizedBox(width: 8),
-                Text(
-                  _isSelecting
-                      ? '選択中 (${_selectedItems.length}/${_filteredItems.length}件)'
-                      : '欲しいものリスト (${_filteredItems.length}件)',
-                  style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
+                _selectedItems.isNotEmpty
+                    ? Text(
+                        'マイリスト (${_selectedItems.length}/${_filteredItems.length}件)',
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      )
+                    : Text(
+                        'マイリスト (${_filteredItems.length}件)',
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
                 const Spacer(),
-                if (_isSelecting && _selectedItems.isNotEmpty)
+                if (_selectedItems.isNotEmpty)
                   GestureDetector(
                     onTap: _deleteSelectedItems,
                     child: Container(
@@ -314,12 +296,6 @@ class _WantListState extends State<WantList> {
                       ]),
                     ),
                   ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _toggleSelectMode,
-                  child: Icon(_isSelecting ? Icons.close : Icons.delete,
-                      color: Colors.black),
-                ),
               ],
             ),
           ),
