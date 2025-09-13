@@ -176,7 +176,8 @@ class _PopupContainerState extends State<PopupContainer> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-              if (widget.item.location != null &&
+              if (widget.item.category == "location" &&
+                  widget.item.location != null &&
                   widget.item.location!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(

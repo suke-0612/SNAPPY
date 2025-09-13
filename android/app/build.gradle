@@ -27,7 +27,6 @@ android {
     namespace = "com.example.snappy"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
-    minSdkVersion 20 
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
