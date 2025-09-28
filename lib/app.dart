@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       navigatorObservers: [routeObserver], // ← 登録
-      home: const Home(),
+      home: const MainScreen(),
     );
   }
 }
