@@ -6,7 +6,7 @@ plugins {
 }
 
 def localProperties = new Properties()
-def localPropertiesFile = rootProject.file("local.properties")
+def localPropertiesFile = rootProject.file("../.env")
 if (localPropertiesFile.exists()) {
     localPropertiesFile.withReader("UTF-8") { reader ->
         localProperties.load(reader)
@@ -46,6 +46,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+        manifestPlaceholders = [
+            applicationName    : "io.flutter.app.FlutterApplication",
+            googleService_API_KEY: localProperties.getProperty('googleService_API_KEY', '')
+        ]
     }
 
     buildTypes {
