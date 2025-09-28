@@ -10,7 +10,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with RouteAware {
-  final List<String> _defaultTags = ["all", "location", "things", "others"];
+  final List<String> _defaultTags = ["all", "場所", "欲しいもの", "その他"];
   final ScrollController _scrollController = ScrollController();
 
   final List<String> _customTags = [];
@@ -192,9 +192,9 @@ class _HomeState extends State<Home> with RouteAware {
 
     try {
       final apiTags = [
-        ['location', ''],
-        ['things', ''],
-        ['others', ''],
+        ['場所', ''],
+        ['欲しいもの', ''],
+        ['その他', ''],
         ...(await getAllTags()).map((t) => [t.name, t.description]),
       ];
       await uploadFilesWithTags(newAssets, apiTags);
