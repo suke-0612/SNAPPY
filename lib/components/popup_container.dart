@@ -33,8 +33,8 @@ class _PopupContainerState extends State<PopupContainer> {
   }
 
   Future<void> _loadThumbnail() async {
-    final data = await widget.item.assetEntity
-        ?.thumbnailDataWithSize(ThumbnailSize(300, 400));
+    // 高解像度の画像を取得して拡大時に綺麗に表示する
+    final data = await widget.item.assetEntity?.originBytes;
     if (mounted) {
       setState(() {
         thumbnailBytes = data;
@@ -95,47 +95,26 @@ class _PopupContainerState extends State<PopupContainer> {
         ),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0),
+          color: Colors.black.withOpacity(0), 
           borderRadius: BorderRadius.circular(12),
         ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isLoading)
-                SizedBox(
-                  width: maxWidth * 0.8,
-                  height: maxHeight * 0.5,
-                  child: const Center(child: CircularProgressIndicator()),
-                )
-              else if (thumbnailBytes != null)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: maxWidth * 0.8,
-                    maxHeight: maxHeight * 0.5,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.memory(
-                      thumbnailBytes!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: maxWidth * 0.8,
-                  height: maxHeight * 0.5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.image_not_supported_outlined,
-                    color: Colors.white54,
-                    size: 60,
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxWidth * 0.8,
+                  maxHeight: maxHeight * 0.5,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container( 
+                    color: Colors.grey[900],
+                    child: _buildImageViewer(),
                   ),
                 ),
+              ),
               const SizedBox(height: 16),
               if (widget.item.category.isNotEmpty)
                 Align(
@@ -236,5 +215,30 @@ class _PopupContainerState extends State<PopupContainer> {
         ),
       ),
     );
+  }
+
+  // 画像表示部分を構築するヘルパーメソッド
+  Widget _buildImageViewer() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (thumbnailBytes != null) {
+      return InteractiveViewer(
+        panEnabled: true, // ドラッグ移動を有効にする
+        minScale: 1.0,    // 最小縮小率
+        maxScale: 6.0,    // 最大拡大率
+        child: Image.memory(
+          thumbnailBytes!,
+          // fit: BoxFit.cover, は削除（デフォルトの contain を使用）
+        ),
+      );
+    } else {
+      return const Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.white54,
+          size: 60,
+        ),
+      );
+    }
   }
 }
