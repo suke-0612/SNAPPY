@@ -58,34 +58,31 @@ class _CategorySettingsState extends State<CategorySettings> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              _sectionHeader(
-                  icon: Icons.add_circle_outline_outlined, title: 'カテゴリの追加'),
-              const SizedBox(height: 10),
-              AddCategoryForm(onSubmit: _refreshCategories),
-              const SizedBox(height: 20),
-              _sectionHeader(
-                  icon: Icons.remove_circle_outline, title: 'カテゴリの削除'),
-              const SizedBox(height: 10),
-              DeleteCategory(
-                allTags: _allTags,
-                selectedTags: _selectedTags,
-                onTagsChanged: (newSelected) {
-                  setState(() {
-                    _selectedTags = newSelected;
-                  });
-                },
-                onDelete: _refreshCategories,
-              ),
-            ],
-          ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 10),
+            _sectionHeader(
+                icon: Icons.add_circle_outline_outlined, title: 'カテゴリの追加'),
+            const SizedBox(height: 10),
+            AddCategoryForm(onSubmit: _refreshCategories),
+            const SizedBox(height: 20),
+            _sectionHeader(icon: Icons.remove_circle_outline, title: 'カテゴリの削除'),
+            const SizedBox(height: 10),
+            DeleteCategory(
+              allTags: _allTags,
+              selectedTags: _selectedTags,
+              onTagsChanged: (newSelected) {
+                setState(() {
+                  _selectedTags = newSelected;
+                });
+              },
+              onDelete: _refreshCategories,
+            ),
+          ],
         ),
       ),
     );

@@ -54,72 +54,69 @@ class _SettingsState extends State<Settings> {
     }
 
     return Scaffold(
-      body: BaseScreen(
-        child: Center(
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 8.0),
-                  alignment: Alignment.centerLeft,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.photo, color: Colors.black),
-                      SizedBox(width: 8),
-                      Text(
-                        '写真アクセスの設定',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Container(
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                alignment: Alignment.centerLeft,
+                child: const Row(
+                  children: [
+                    Icon(Icons.photo, color: Colors.black),
+                    SizedBox(width: 8),
+                    Text(
+                      '写真アクセスの設定',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                child: Card(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Icon(statusIcon, color: statusColor, size: 30),
+                        const SizedBox(width: 16),
+                        Text(
+                          statusText,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              if (_permissionState == PermissionState.limited)
                 Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 8.0),
-                  child: Card(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Icon(statusIcon, color: statusColor, size: 30),
-                          const SizedBox(width: 16),
-                          Text(
-                            statusText,
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: statusColor),
-                          ),
-                        ],
-                      ),
-                    ),
+                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                  width: double.infinity,
+                  child: CustomButton(
+                    onPressed: _addAccess,
+                    label: '他の写真へのアクセスを追加',
+                    backgroundColor: Colors.orange[800]!,
                   ),
                 ),
-                const SizedBox(height: 12),
-                if (_permissionState == PermissionState.limited)
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                    width: double.infinity,
-                    child: CustomButton(
-                      onPressed: _addAccess,
-                      label: '他の写真へのアクセスを追加',
-                      backgroundColor: Colors.orange[800]!,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

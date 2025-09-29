@@ -319,65 +319,63 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseScreen(
-      child: Column(
-        children: [
-          // ヘッダー
+    return Column(
+      children: [
+        // ヘッダー
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              const Icon(Icons.map, color: Colors.black),
+              const SizedBox(width: 8),
+              Text(
+                'マップ (${_locationScreenshots.length}件)',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // エラーメッセージ
+        if (_errorMessage.isNotEmpty)
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            alignment: Alignment.centerLeft,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red.shade200),
+            ),
             child: Row(
               children: [
-                const Icon(Icons.map, color: Colors.black),
+                Icon(Icons.error, color: Colors.red.shade600),
                 const SizedBox(width: 8),
-                Text(
-                  'マップ (${_locationScreenshots.length}件)',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(color: Colors.red.shade600),
                   ),
                 ),
               ],
             ),
           ),
 
-          // エラーメッセージ
-          if (_errorMessage.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.red.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red.shade600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // マップまたはコンテンツ
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage.isNotEmpty
-                    ? _buildErrorState()
-                    : _locationScreenshots.isEmpty
-                        ? _buildEmptyState()
-                        : _buildMap(),
-          ),
-        ],
-      ),
+        // マップまたはコンテンツ
+        Expanded(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage.isNotEmpty
+                  ? _buildErrorState()
+                  : _locationScreenshots.isEmpty
+                      ? _buildEmptyState()
+                      : _buildMap(),
+        ),
+      ],
     );
   }
 

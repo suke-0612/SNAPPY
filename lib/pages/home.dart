@@ -514,47 +514,45 @@ class _HomeState extends State<Home> with RouteAware {
   Widget build(BuildContext context) {
     final totalPages = (_itemsFromScreenshots.length / _itemsPerPage).ceil();
 
-    return BaseScreen(
-      child: Column(
-        children: [
-          _buildSearchBar(),
-          _buildPageInfo(),
-          if (_loading) _buildLoadingIndicator(),
-          if (_isSelectionMode) _buildSelectionPanel(),
-          Expanded(
-            child: _hasAccess
-                ? _isItemView
-                    ? ItemsView(
-                        items: _pagedItems,
-                        selectedItems: _selectedIds,
-                        isSelectionMode: _isSelectionMode,
-                        onItemTap: _handleTap,
-                        onItemLongPress: _handleLongPress,
-                        scrollController: _scrollController,
-                        onRefresh: refreshData,
-                      )
-                    : TitleListView(
-                        items: _pagedItems,
-                        selectedItems: _selectedIds,
-                        isSelectionMode: _isSelectionMode,
-                        onItemTap: _handleTap,
-                        changeSelectMode: changeSelectMode,
-                        scrollController: _scrollController,
-                        onRefresh: refreshData,
-                      )
-                : _buildPermissionWarning(context),
+    return Column(
+      children: [
+        _buildSearchBar(),
+        _buildPageInfo(),
+        if (_loading) _buildLoadingIndicator(),
+        if (_isSelectionMode) _buildSelectionPanel(),
+        Expanded(
+          child: _hasAccess
+              ? _isItemView
+                  ? ItemsView(
+                      items: _pagedItems,
+                      selectedItems: _selectedIds,
+                      isSelectionMode: _isSelectionMode,
+                      onItemTap: _handleTap,
+                      onItemLongPress: _handleLongPress,
+                      scrollController: _scrollController,
+                      onRefresh: refreshData,
+                    )
+                  : TitleListView(
+                      items: _pagedItems,
+                      selectedItems: _selectedIds,
+                      isSelectionMode: _isSelectionMode,
+                      onItemTap: _handleTap,
+                      changeSelectMode: changeSelectMode,
+                      scrollController: _scrollController,
+                      onRefresh: refreshData,
+                    )
+              : _buildPermissionWarning(context),
+        ),
+        if (totalPages > 1)
+          Pagination(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            onPageChanged: (page) {
+              setState(() => _currentPage = page);
+              _scrollController.jumpTo(0.0);
+            },
           ),
-          if (totalPages > 1)
-            Pagination(
-              currentPage: _currentPage,
-              totalPages: totalPages,
-              onPageChanged: (page) {
-                setState(() => _currentPage = page);
-                _scrollController.jumpTo(0.0);
-              },
-            ),
-        ],
-      ),
+      ],
     );
   }
 
