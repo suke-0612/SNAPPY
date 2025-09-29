@@ -7,7 +7,6 @@ export 'package:snappy/pages/map.dart';
 export 'package:snappy/pages/settings.dart';
 
 export 'package:snappy/components/header.dart';
-export 'package:snappy/components/base_screen.dart';
 export 'package:snappy/components/pull_button.dart';
 export 'package:snappy/components/custom_button.dart';
 export "package:snappy/components/input_search.dart";

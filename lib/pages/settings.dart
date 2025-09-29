@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:snappy/components/base_screen.dart';
 import 'package:snappy/components/custom_button.dart';
 
 class Settings extends StatefulWidget {
