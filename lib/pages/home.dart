@@ -407,31 +407,57 @@ class _HomeState extends State<Home> with RouteAware {
   Future<void> _showPopup(ItemData item) async {
     final success = await showDialog<bool>(
       context: context,
+      barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.7),
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 40),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
-          child: PopupContainer(
-            item: item,
-            onPressedEdit: () async {
-              final edited = await showEditItemPopup(
-                context,
-                item: item,
-                onRefresh: refreshData,
-              );
-              if (edited == true) Navigator.of(ctx).pop(true);
-            },
-            onPressedDelete: () async {
-              await DeleteItemService.deleteScreenshotWithAuth(
-                context: ctx,
-                assetEntity: item.assetEntity!,
-                assetId: item.id,
-                onSuccess: () => Navigator.of(ctx).pop(),
-                onError: null,
-              );
-            },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PopupContainer(
+                    item: item,
+                    onPressedEdit: () async {
+                      final edited = await showEditItemPopup(
+                        context,
+                        item: item,
+                        onRefresh: refreshData,
+                      );
+                      if (edited == true) Navigator.of(ctx).pop(true);
+                    },
+                    onPressedDelete: () async {
+                      await DeleteItemService.deleteScreenshotWithAuth(
+                        context: ctx,
+                        assetEntity: item.assetEntity!,
+                        assetId: item.id,
+                        onSuccess: () => Navigator.of(ctx).pop(),
+                        onError: null,
+                      );
+                    },
+                  ),
+                ],
+              ),
+
+              // 右上に閉じるボタン
+              Positioned(
+                top: -30,
+                right: 30,
+                child: Material(
+                  color: Colors.white.withOpacity(0.9),
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.black),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    tooltip: '閉じる',
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
