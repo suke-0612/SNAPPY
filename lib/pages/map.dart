@@ -97,7 +97,7 @@ class _MapPageState extends State<MapPage> {
 
       // locationタグのスクリーンショットを取得
       final screenshots =
-          await isar.screenshots.filter().tagEqualTo('location').findAll();
+          await isar.screenshots.filter().tagEqualTo('場所').findAll();
 
       if (!mounted) return;
 
@@ -503,13 +503,13 @@ class _MapPageState extends State<MapPage> {
           Icon(Icons.location_off, size: 64, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-            'locationタグの位置情報がありません',
+            '場所タグの位置情報がありません',
             style: TextStyle(color: Colors.grey, fontSize: 16),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8),
           Text(
-            'ホーム画面でスクリーンショットに\n"location"タグと住所を付けてください',
+            'ホーム画面でスクリーンショットに\n"場所"タグと住所を付けてください',
             style: TextStyle(color: Colors.grey, fontSize: 14),
             textAlign: TextAlign.center,
           ),

@@ -10,7 +10,6 @@ class BaseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const Header(),
-      endDrawer: const AppDrawer(),
       body: Stack(
         children: [
           Container(

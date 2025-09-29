@@ -38,6 +38,7 @@ class SelectTagPullButton extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedTag,
+          isExpanded: true,
           icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
           elevation: 16,
           style: TextStyle(

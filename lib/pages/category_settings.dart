@@ -44,7 +44,7 @@ class _CategorySettingsState extends State<CategorySettings> {
     setState(() {
       _allTags = tags
           .where(
-            (tag) => !['location', 'things', 'others'].contains(tag.name),
+            (tag) => !['場所', '欲しいもの', 'その他'].contains(tag.name),
           )
           .map((tag) => tag.name)
           .toList();
