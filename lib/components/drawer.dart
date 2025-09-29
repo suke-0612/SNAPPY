@@ -92,12 +92,6 @@ class AppDrawer extends StatelessWidget {
                   ),
                   _buildMenuTile(
                     context: context,
-                    icon: Icons.inventory_2,
-                    title: 'マイリスト',
-                    page: const WantList(),
-                  ),
-                  _buildMenuTile(
-                    context: context,
                     icon: Icons.map,
                     title: 'マップ',
                     page: const MapPage(),
