@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snappy/importer.dart'; 
+import 'package:snappy/importer.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -33,7 +33,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       // 選択されているインデックスに応じて、表示するページを切り替える
       body: _pages.elementAt(_selectedIndex),
-      
+
       // ここがフッター部分
       bottomNavigationBar: BottomNavigationBar(
         // フッターに表示するアイテムのリスト
@@ -41,10 +41,6 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2),
-            label: 'マイリスト',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
@@ -59,16 +55,16 @@ class _MainScreenState extends State<MainScreen> {
             label: '設定',
           ),
         ],
-        currentIndex: _selectedIndex,       // 現在選択されているアイテム
-        onTap: _onItemTapped,              // タップされたときの処理
-        
+        currentIndex: _selectedIndex, // 現在選択されているアイテム
+        onTap: _onItemTapped, // タップされたときの処理
+
         // --- フッターのデザイン設定 ---
-        backgroundColor: Colors.white,      // 背景色
+        backgroundColor: Colors.white, // 背景色
         selectedItemColor: Color(0xFFF98E6E), // 選択中のアイテムの色
-        unselectedItemColor: Colors.grey,     // 非選択のアイテムの色
-        type: BottomNavigationBarType.fixed,  // アイテムを等間隔に配置
-        showUnselectedLabels: true,           // 非選択のラベルも表示
-        selectedFontSize: 12.0,               // 選択中のフォントサイズ
+        unselectedItemColor: Colors.grey, // 非選択のアイテムの色
+        type: BottomNavigationBarType.fixed, // アイテムを等間隔に配置
+        showUnselectedLabels: true, // 非選択のラベルも表示
+        selectedFontSize: 12.0, // 選択中のフォントサイズ
       ),
     );
   }
