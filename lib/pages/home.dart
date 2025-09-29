@@ -22,7 +22,7 @@ class _HomeState extends State<Home> with RouteAware {
   String _searchQuery = '';
   bool _hasAccess = false;
   bool _loading = true;
-  bool _isItemView = true;
+  bool _isGridView = true;
 
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
@@ -522,7 +522,7 @@ class _HomeState extends State<Home> with RouteAware {
         if (_isSelectionMode) _buildSelectionPanel(),
         Expanded(
           child: _hasAccess
-              ? _isItemView
+              ? _isGridView
                   ? ItemsView(
                       items: _pagedItems,
                       selectedItems: _selectedIds,
@@ -623,8 +623,9 @@ class _HomeState extends State<Home> with RouteAware {
     final start = (_currentPage - 1) * _itemsPerPage + 1;
     final end = min(_currentPage * _itemsPerPage, totalItems);
 
-    return Padding(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+      margin: const EdgeInsets.only(top: 8, bottom: 0),
       child: Row(
         children: [
           ShaderMask(
@@ -668,19 +669,23 @@ class _HomeState extends State<Home> with RouteAware {
             ),
           ),
           const Spacer(), // ← 右端に押し出す
-          IconButton(
-            icon: _isItemView
-                ? const Icon(Icons.grid_view, size: 32)
-                : const Icon(Icons.list, size: 32),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 40,
-              minHeight: 40,
+          ToggleButtons(
+            isSelected: _isGridView ? [true, false] : [false, true],
+            constraints: BoxConstraints(
+              minHeight: 30,
+              minWidth: (MediaQuery.of(context).size.width - 36) / 6,
             ),
-            tooltip: '最新の情報に更新',
-            onPressed: () {
+            color: Colors.white,
+            fillColor: Color(0xFFE83745),
+            borderColor: Color(0xFFE83745),
+            splashColor: Color(0xFFE83745),
+            selectedBorderColor: Color(0xFFE83745),
+            selectedColor: Colors.white,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+            children: const [Icon(Icons.grid_view), Icon(Icons.list)],
+            onPressed: (int index) {
               setState(() {
-                _isItemView = !_isItemView;
+                _isGridView = index == 0;
               });
             },
           ),
