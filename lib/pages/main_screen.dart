@@ -15,7 +15,6 @@ class _MainScreenState extends State<MainScreen> {
   // フッターで切り替えるページのリスト
   static const List<Widget> _pages = <Widget>[
     Home(),
-    WantList(),
     MapPage(),
     CategorySettings(),
     Settings(),
