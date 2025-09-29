@@ -107,36 +107,6 @@ class ItemCard extends StatelessWidget {
                 ),
               ),
 
-              // 編集ボタン
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Material(
-                  color: Colors.white.withOpacity(0.85),
-                  shape: const CircleBorder(),
-                  elevation: 4,
-                  child: IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.black87),
-                    onPressed: () async {
-                      if (onEdit == null) return;
-                      final bool? success = await showEditItemPopup(
-                        context,
-                        item: item,
-                        onRefresh: onEdit!,
-                      );
-                      if (!context.mounted) return;
-                      if (success == true) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('編集内容を保存しました')),
-                        );
-                      }
-                    },
-                    tooltip: 'Edit',
-                    splashRadius: 20,
-                  ),
-                ),
-              ),
-
               // 選択状態
               if (isSelected)
                 Container(
