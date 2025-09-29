@@ -22,6 +22,7 @@ class _HomeState extends State<Home> with RouteAware {
   String _searchQuery = '';
   bool _hasAccess = false;
   bool _loading = true;
+  bool _isItemView = true;
 
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
@@ -232,6 +233,12 @@ class _HomeState extends State<Home> with RouteAware {
     }
   }
 
+  void changeSelectMode(bool enable) {
+    setState(() {
+      _isSelectionMode = enable;
+    });
+  }
+
   void _exitSelectionMode() {
     setState(() {
       _isSelectionMode = false;
@@ -239,23 +246,57 @@ class _HomeState extends State<Home> with RouteAware {
     });
   }
 
+  // まず、_deleteSelectedItems メソッドを追加します
   Future<void> _deleteSelectedItems() async {
-    final selectedMap = {
-      for (var id in _selectedIds)
-        _screenshots.firstWhere((a) => a.id == id): id
-    };
+    if (_selectedIds.isEmpty) return;
 
+    // 選択されたアイテムを取得
+    final selectedItems = <AssetEntity, String>{};
+    for (final id in _selectedIds) {
+      final item = _itemsFromScreenshots.firstWhere(
+        (item) => item.id == id,
+        orElse: () => ItemData(
+          id: '',
+          text: '',
+          location: '',
+          category: '',
+          description: '',
+          assetEntity: null,
+          thumbnailBytes: null,
+        ),
+      );
+      if (item.assetEntity != null) {
+        selectedItems[item.assetEntity!] = item.id;
+      }
+    }
+
+    if (selectedItems.isEmpty) return;
+
+    // 削除実行（別ファイルの関数を使用）
     await DeleteItemService.deleteBulkScreenshotsWithAuth(
       context: context,
-      items: selectedMap,
+      items: selectedItems,
       onSuccess: () {
-        setState(() {
-          _screenshots.removeWhere((a) => _selectedIds.contains(a.id));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${_selectedIds.length}件のアイテムを削除しました'),
+            ),
+          );
           _exitSelectionMode();
-        });
-        _refreshIsarScreenshotMap();
+          refreshData(); // データを再読み込み
+        }
       },
-      onError: (e) => print('削除エラー: $e'),
+      onError: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('削除に失敗しました: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -482,15 +523,25 @@ class _HomeState extends State<Home> with RouteAware {
           if (_isSelectionMode) _buildSelectionPanel(),
           Expanded(
             child: _hasAccess
-                ? ItemsView(
-                    items: _pagedItems,
-                    selectedItems: _selectedIds,
-                    isSelectionMode: _isSelectionMode,
-                    onItemTap: _handleTap,
-                    onItemLongPress: _handleLongPress,
-                    scrollController: _scrollController,
-                    onRefresh: refreshData,
-                  )
+                ? _isItemView
+                    ? ItemsView(
+                        items: _pagedItems,
+                        selectedItems: _selectedIds,
+                        isSelectionMode: _isSelectionMode,
+                        onItemTap: _handleTap,
+                        onItemLongPress: _handleLongPress,
+                        scrollController: _scrollController,
+                        onRefresh: refreshData,
+                      )
+                    : TitleListView(
+                        items: _pagedItems,
+                        selectedItems: _selectedIds,
+                        isSelectionMode: _isSelectionMode,
+                        onItemTap: _handleTap,
+                        changeSelectMode: changeSelectMode,
+                        scrollController: _scrollController,
+                        onRefresh: refreshData,
+                      )
                 : _buildPermissionWarning(context),
           ),
           if (totalPages > 1)
@@ -509,7 +560,7 @@ class _HomeState extends State<Home> with RouteAware {
 
   Widget _buildSearchBar() {
     return Container(
-        margin: const EdgeInsets.all(10.0),
+        margin: const EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 0),
         child: Row(
           children: [
             Expanded(
@@ -575,49 +626,67 @@ class _HomeState extends State<Home> with RouteAware {
     final end = min(_currentPage * _itemsPerPage, totalItems);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: ShaderMask(
-          shaderCallback: (bounds) {
-            return const LinearGradient(
-              colors: [
-                Color(0xFFF98E6E),
-                Color.fromARGB(255, 145, 54, 33)
-              ], // 赤→オレンジ
-            ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
-          },
-          child: Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(
-                  text: 'Show: ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+      child: Row(
+        children: [
+          ShaderMask(
+            shaderCallback: (bounds) {
+              return const LinearGradient(
+                colors: [
+                  Color(0xFFF98E6E),
+                  Color.fromARGB(255, 145, 54, 33)
+                ], // 赤→オレンジ
+              ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
+            },
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: 'Show: ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: '$start–$end',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  TextSpan(
+                    text: '$start–$end',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: ' of $totalItems',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                  TextSpan(
+                    text: ' of $totalItems',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+          const Spacer(), // ← 右端に押し出す
+          IconButton(
+            icon: _isItemView
+                ? const Icon(Icons.grid_view, size: 32)
+                : const Icon(Icons.list, size: 32),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 40,
+              minHeight: 40,
+            ),
+            tooltip: '最新の情報に更新',
+            onPressed: () {
+              setState(() {
+                _isItemView = !_isItemView;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
