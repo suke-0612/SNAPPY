@@ -46,8 +46,8 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
 
     setState(() {
       _categoryOptions = names.isNotEmpty
-          ? names + ['location', 'things', 'others']
-          : ['location', 'things', 'others'];
+          ? names + ['場所', '欲しいもの', 'その他']
+          : ['場所', '欲しいもの', 'その他'];
 
       if (!_categoryOptions.contains(_selectedCategory)) {
         _selectedCategory = _categoryOptions.first;
@@ -176,7 +176,7 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                   maxLines: 4,
                 ),
                 const SizedBox(height: 16),
-                if (_categoryController.text == 'location') ...[
+                if (_categoryController.text == '場所') ...[
                   const Text('位置情報',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),

@@ -10,7 +10,7 @@ class WantList extends StatefulWidget {
 }
 
 class _WantListState extends State<WantList> {
-  static const String _thingsTag = 'things';
+  static const String _thingsTag = '欲しいもの';
   static const String _amazonBaseUrl = 'https://www.amazon.co.jp/s?k=';
 
   List<ItemData> _thingsItems = [];
@@ -234,7 +234,7 @@ class _WantListState extends State<WantList> {
               textAlign: TextAlign.center),
           if (_searchQuery.isEmpty) const SizedBox(height: 8),
           if (_searchQuery.isEmpty)
-            const Text('ホーム画面でスクリーンショットに\n"things"タグを付けてください',
+            const Text('ホーム画面でスクリーンショットに\n"$_thingsTag"タグを付けてください',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
                 textAlign: TextAlign.center),
         ],
