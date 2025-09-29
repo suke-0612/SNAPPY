@@ -77,11 +77,14 @@ class _AddCategoryFormState extends State<AddCategoryForm> {
                 decoration: const InputDecoration(
                   fillColor: Colors.white,
                   filled: true,
-                  hintText: '例：train, book, など',
+                  hintText: '例：時刻表, 読みたい本, など',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'カテゴリ名を入力してください。';
+                  }
+                  if (value.length > 10) {
+                    return 'カテゴリ名は10文字以内で入力してください。';
                   }
                   return null;
                 },

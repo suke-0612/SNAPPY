@@ -146,7 +146,7 @@ class _EditItemInfoFormState extends State<EditItemInfoForm> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: SizedBox(
-                    width: 130,
+                    width: 140,
                     child: SelectTagPullButton(
                       tags: _categoryOptions,
                       selectedTag: _selectedCategory,
